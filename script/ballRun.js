@@ -1,3 +1,5 @@
+import { initializeAudio, detectBeats } from './audioManager.js';
+
 var canva = document.getElementById("gameCanvas");
 const context = canva.getContext("2d");
 
@@ -37,6 +39,7 @@ var bgX2 = canva.width;
 
 
 //Obstacles
+//var obstacles =[];
 var obstacles = [
   { x: canva.width, width: 50, height: 50 },
   { x: canva.width + 300, width: 40, height: 60 },
@@ -57,17 +60,43 @@ var isSlow = false;
 var slowTimer = 0;
 
 //Son
-const soundJump = new Audio("sound/jump.mp3")
+//const soundJump = new Audio("sound/jump.mp3")
 
 //Gestion du saut
 document.addEventListener("keydown", (e) => {
   if (e.code === "Space" && (ballY === groundY - 10 || isOnBlock)) {
     velocityY = jumpPower;
-    soundJump.play();
+    //soundJump.play();
     isOnBlock = false; // La balle quitte le bloc
   }
 });
 
+
+
+const backgroundMusic = new Audio("musique/backgroundMusique.mp3");
+backgroundMusic.loop = true; // Répète la musique en boucle
+backgroundMusic.volume = 1; // Ajuste le volume
+
+detectBeats(() => {
+  generateObstacle(); // Fonction de génération d'obstacle appelée sur un beat détecté
+});
+
+//generer les obstacles
+function generateObstacle() {
+  obstacles.push({
+    x: canva.width,
+    width: 20 + Math.random() * 30,
+    height: 20 + Math.random() * 50,
+  });
+
+  // Limiter le nombre d'obstacles actifs pour éviter une surcharge
+  if (obstacles.length > 5) {
+    obstacles.shift();
+  }
+}
+
+
+//Generer les bonus
 function generateBonus() {
   bonus = {
     x: canva.width,
@@ -265,10 +294,13 @@ function checkBonusCollision() {
     }
 
     //Ajuster la vitess en fonction du score
-    speed = baseSpeed + (0.2 * (Math.floor(score / 5)));
-    console.log(speed);
+    
     if (speed > 15) {
       speed = 15;
+      console.log(speed)
+    }else{
+      speed = baseSpeed + (0.2 * (Math.floor(score / 5)));
+      console.log(speed)
     }
 
     //Dessine les obstacles
@@ -389,13 +421,18 @@ function checkBonusCollision() {
   }
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "s" && !start || e.key === "S" && !start) {
+    if (e.key === "s" && !start || e.key === "S" && !start) {    
+      // Démarrer le jeu après interaction
+      initializeAudio(backgroundMusic);
       updateGame();
+      
     }
   });
 
   window.addEventListener("keydown", (e) => {
     if (e.key === "r" && isGameOver || e.key === "R" && isGameOver) {
+          // Démarrer le jeu après interaction
+      initializeAudio(backgroundMusic);
       restartGame();
     }
   });
