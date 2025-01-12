@@ -3,34 +3,34 @@ var analyser;
 var dataArray;
 var audioContext;
 var audioSource;
+var audioElement;
 
 // Charger la musique de fond et configurer l'analyser
-export function initializeAudio(backgroundMusicElement) {
+export function initializeAudio() {
 
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        console.log("hey")
+        
     }
 
     if (!audioSource) {
-        audioSource = audioContext.createMediaElementSource(backgroundMusicElement);
-        console.log(audioSource)
+        audioElement = document.querySelector('audio');
+        audioSource = audioContext.createMediaElementSource(audioElement);
         analyser = audioContext.createAnalyser();
 
         // Connecter les nœuds
         audioSource.connect(analyser);
         analyser.connect(audioContext.destination);
-        analyser.fftSize = 512; // Résolution moyenne
-        analyser.minDecibels = -90;
-        analyser.maxDecibels = 10;
-        analyser.smoothingTimeConstant = 0.85;
-        // Taille pour analyser les fréquences.
-        console.log(analyser)
+        analyser.fftSize = 256; // Résolution moyenne
 
         // Tableau pour stocker les données audio
         dataArray = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(dataArray);
+        
         console.log('Données audio :', dataArray);
-        backgroundMusicElement.play();
+        console.log("ho")
+        audioElement.play();
 
     }
 }
@@ -40,6 +40,7 @@ export function detectBeats(callback) {
     if (!analyser) return;
 
     analyser.getByteFrequencyData(dataArray);
+    
 
     const threshold = 100; // Seuil pour détecter un beat
     let beatDetected = false;

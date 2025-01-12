@@ -180,7 +180,7 @@ function checkBonusCollision() {
       }
     }
   }
-
+/*
   function drawScrollingBackground() {
     // Dessiner les deux images côte à côte
     context.drawImage(bgImage1, bgX1, 0, canva.width, canva.height);
@@ -203,6 +203,7 @@ function checkBonusCollision() {
       bgX2 = bgX1 + canva.width;
     }
   }
+    */
 
   function drawBackground() {
 
@@ -401,6 +402,7 @@ function checkBonusCollision() {
 
 
     requestAnimationFrame(updateGame);
+    
   }
 
   function restartGame() {
@@ -423,7 +425,7 @@ function checkBonusCollision() {
   document.addEventListener("keydown", (e) => {
     if (e.key === "s" && !start || e.key === "S" && !start) {    
       // Démarrer le jeu après interaction
-      initializeAudio(backgroundMusic);
+      initializeAudio();
       updateGame();
       
     }
@@ -432,7 +434,7 @@ function checkBonusCollision() {
   window.addEventListener("keydown", (e) => {
     if (e.key === "r" && isGameOver || e.key === "R" && isGameOver) {
           // Démarrer le jeu après interaction
-      initializeAudio(backgroundMusic);
+      initializeAudio();
       restartGame();
     }
   });
