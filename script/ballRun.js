@@ -1,4 +1,4 @@
-import { initializeAudio, detectBeats } from "./audioManager.js";
+import { initializeAudio, detectBeats, drawB } from "./audioManager.js";
 
 var canva = document.getElementById("gameCanvas");
 const context = canva.getContext("2d");
@@ -17,7 +17,9 @@ var isGameOver = false;
 var ballY = 290;
 var velocityY = 0;
 const gravity = 0.3;
+const maxJumpPower = -15;
 const jumpPower = -10;
+const minJumpPower = -2
 const groundY = 300;
 var isOnBlock = false;
 
@@ -57,13 +59,46 @@ var slowTimer = 0;
 //const soundJump = new Audio("sound/jump.mp3")
 
 //Gestion du saut
+var jumpStartTime = null;
+var doubleJumpAvailable = true;
+
 document.addEventListener("keydown", (e) => {
-  if (e.code === "Space" && (ballY === groundY - 10 || isOnBlock)) {
-    velocityY = jumpPower;
-    //soundJump.play();
-    isOnBlock = false; // La balle quitte le bloc
+  if (e.code === "Space") {
+    if ((ballY === groundY - 10 || isOnBlock)) {
+      velocityY = jumpPower;
+      //soundJump.play();
+      isOnBlock = false; // La balle quitte le bloc
+      doubleJumpAvailable = true;
+    }else if(doubleJumpAvailable){
+      velocityY = jumpPower + 2;
+      doubleJumpAvailable = false
+    }
+
+    if(e.code === "Space" && jumpStartTime === null){
+      jumpStartTime = Date.now();
+      
+    }
+
   }
 });
+
+document.addEventListener("keyup", (e) => {
+  if (e.code === "Space" && jumpStartTime != null){
+    let pressDuration = (Date.now() - jumpStartTime) / 1000;
+    jumpStartTime = null;
+
+    let jumpPowerModulated = Math.max(maxJumpPower, minJumpPower - pressDuration * 10);
+
+    if(ballY === groundY -10 || isOnBlock){
+      velocityY = jumpPowerModulated;
+      isOnBlock = false;
+      doubleJumpAvailable = true;
+    }else if(doubleJumpAvailable){
+      velocityY = jumpPowerModulated;
+    }
+  }
+})
+
 
 const backgroundMusic = new Audio("musique/backgroundMusique.mp3");
 backgroundMusic.loop = true; // Répète la musique en boucle
@@ -181,8 +216,8 @@ function updateSlow() {
 function generateObstacle() {
   const obstacle = {
     x: canva.width,
-    width: 40 + Math.floor(Math.random()*10),
-    height: 20 + Math.floor(Math.random()*50),
+    width: 40 + Math.floor(Math.random() * 10),
+    height: 20 + Math.floor(Math.random() * 50),
   };
   obstacles.push(obstacle); // Ajoute le nouvel obstacle au tableau
 }
@@ -211,7 +246,7 @@ function drawObstacles() {
     if (obstacle.x + obstacle.width < 0) {
       obstacles.splice(i, 1); // Retire l'obstacle du tableau
       score++;
-      if (score %5 === 0){
+      if (score % 10 === 0) {
         scoreDisplay++
       } // Incrémente le score
     }
@@ -247,6 +282,8 @@ function checkObstaclesCollision() {
       ) {
         console.log("Collision détectée !");
         isGameOver = true; // Déclenche le Game Over
+        
+
         start = false;
         break;
       }
@@ -301,13 +338,15 @@ function updateGame() {
       canva.width / 2,
       canva.height / 2 + 40
     );
+    backgroundMusic.pause()
     return; // Arrête la boucle du jeu
   }
 
   context.clearRect(0, 0, canva.width, canva.height);
 
   //drawScrollingBackground();
-  drawBackground();
+  drawB(context,canva)
+  //drawBackground();
   drawBonus();
   updateBonus();
 
@@ -343,7 +382,6 @@ function updateGame() {
     console.log(speed);
   } else {
     speed = baseSpeed + 0.2 * Math.floor(scoreDisplay / 5);
-    console.log(speed);
   }
 
   detectBeats(() => {
@@ -352,7 +390,7 @@ function updateGame() {
 
   drawObstacles();
 
-  
+
 
   checkObstaclesCollision();
 
@@ -435,14 +473,36 @@ function updateGame() {
     context.fillStyle = "black";
     context.font = "40px Arial";
     context.textAlign = "center";
-    context.fillText("INVINCIBLE", canva.width / 2, canva.height / 2);
+    context.fillText("INVINCIBLE", canva.width / 2, 100 );
     context.font = "20px Arial";
   }
   if (isSlow) {
     context.fillStyle = "black";
     context.font = "40px Arial";
     context.textAlign = "center";
-    context.fillText("SLOW", canva.width / 2, canva.height / 2);
+    context.fillText("SLOW", canva.width / 2, 100 );
+    context.font = "20px Arial";
+  }
+
+  if (speed > 10 ){
+    context.fillStyle = "black";
+    context.font = "40px Arial";
+    context.textAlign = "center";
+    context.fillText("YOU ARE FAST!!", canva.width / 2, canva.height );
+    context.font = "20px Arial";
+  }
+  if (speed > 5 && speed < 10){
+    context.fillStyle = "black";
+    context.font = "40px Arial";
+    context.textAlign = "center";
+    context.fillText("GO FAST!!", canva.width / 2, canva.height );
+    context.font = "20px Arial";
+  }
+  if (speed < 4 ){
+    context.fillStyle = "black";
+    context.font = "40px Arial";
+    context.textAlign = "center";
+    context.fillText("YOU ARE SO SLOW!!", canva.width / 2, canva.height);
     context.font = "20px Arial";
   }
 
@@ -456,24 +516,22 @@ function updateGame() {
 function restartGame() {
   //Réinitialise les variables
   score = 0;
+  scoreDisplay = 0;
   speed = baseSpeed;
   isGameOver = false;
-  obstacles.forEach((obstacle) => {
-    obstacle.x = canva.width + Math.floor(Math.random() * 300); // Réinitialise l'obstacle à une position aléatoire
-    obstacle.width = 10 + Math.floor(Math.random() * 40); // Taille aléatoire
-    obstacle.height = 10 + Math.floor(Math.random() * 40);
-  });
+  obstacles = []
   ballY = groundY;
   velocityY = 0;
   isOnBlock = false;
-
   updateGame();
+
+  
 }
 
 document.addEventListener("keydown", (e) => {
   if ((e.key === "s" && !start) || (e.key === "S" && !start)) {
     // Démarrer le jeu après interaction
-    initializeAudio();
+    initializeAudio(backgroundMusic);
     updateGame();
   }
 });
@@ -481,7 +539,7 @@ document.addEventListener("keydown", (e) => {
 window.addEventListener("keydown", (e) => {
   if ((e.key === "r" && isGameOver) || (e.key === "R" && isGameOver)) {
     // Démarrer le jeu après interaction
-    initializeAudio();
+    initializeAudio(backgroundMusic);
     restartGame();
   }
 });
