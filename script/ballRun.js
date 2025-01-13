@@ -1,10 +1,11 @@
-import { initializeAudio, detectBeats } from './audioManager.js';
+import { initializeAudio, detectBeats } from "./audioManager.js";
 
 var canva = document.getElementById("gameCanvas");
 const context = canva.getContext("2d");
 
 //Gestion du score
 var score = 0;
+var scoreDisplay = 0;
 
 //Debut de partie
 var start = false;
@@ -26,26 +27,19 @@ var backgrounds = [
   { x: canva.width + 50, width: 50, height: 200 },
   { x: canva.width + 70, width: 50, height: 350 },
   { x: canva.width + 300, width: 50, height: 370 },
-  { x: canva.width + 350, width: 50, height: 250 }
-]
+  { x: canva.width + 350, width: 50, height: 250 },
+];
 
 const bgImage1 = new Image();
 bgImage1.src = "images/bckg1.jpg";
 const bgImage2 = new Image();
 bgImage2.src = "images/bckg2.jpg";
 
-var bgX1 = 0;
-var bgX2 = canva.width;
-
+//var bgX1 = 0;
+//var bgX2 = canva.width;
 
 //Obstacles
-//var obstacles =[];
-var obstacles = [
-  { x: canva.width, width: 50, height: 50 },
-  { x: canva.width + 300, width: 40, height: 60 },
-  { x: canva.width + 600, width: 60, height: 40 },
-];
-
+var obstacles = [];
 //Vitesse
 var baseSpeed = 3;
 var speed = baseSpeed;
@@ -71,30 +65,9 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-
-
 const backgroundMusic = new Audio("musique/backgroundMusique.mp3");
 backgroundMusic.loop = true; // Répète la musique en boucle
 backgroundMusic.volume = 1; // Ajuste le volume
-
-detectBeats(() => {
-  generateObstacle(); // Fonction de génération d'obstacle appelée sur un beat détecté
-});
-
-//generer les obstacles
-function generateObstacle() {
-  obstacles.push({
-    x: canva.width,
-    width: 20 + Math.random() * 30,
-    height: 20 + Math.random() * 50,
-  });
-
-  // Limiter le nombre d'obstacles actifs pour éviter une surcharge
-  if (obstacles.length > 5) {
-    obstacles.shift();
-  }
-}
-
 
 //Generer les bonus
 function generateBonus() {
@@ -149,37 +122,36 @@ function checkBonusCollision() {
       } else {
         activateSlow();
       }
-
     }
   }
 }
 
-  function activateInvincibility() {
-    isInvincible = true;
-    invincibilityTimer = 300; // 300 frames (environ 5 secondes si 60 FPS)
-  }
+function activateInvincibility() {
+  isInvincible = true;
+  invincibilityTimer = 300; // 300 frames (environ 5 secondes si 60 FPS)
+}
 
-  function updateInvincibility() {
-    if (isInvincible) {
-      invincibilityTimer--;
-      if (invincibilityTimer <= 0) {
-        isInvincible = false; // Fin de l'invincibilité
-      }
+function updateInvincibility() {
+  if (isInvincible) {
+    invincibilityTimer--;
+    if (invincibilityTimer <= 0) {
+      isInvincible = false; // Fin de l'invincibilité
     }
   }
-  function activateSlow() {
-    isSlow = true;
-    slowTimer = 300; // 300 frames (environ 5 secondes si 60 FPS)
-  }
+}
+function activateSlow() {
+  isSlow = true;
+  slowTimer = 300; // 300 frames (environ 5 secondes si 60 FPS)
+}
 
-  function updateSlow() {
-    if (isSlow) {
-      slowTimer--;
-      if (slowTimer <= 0) {
-        isSlow = false; // Fin de l'invincibilité
-      }
+function updateSlow() {
+  if (isSlow) {
+    slowTimer--;
+    if (slowTimer <= 0) {
+      isSlow = false; // Fin de l'invincibilité
     }
   }
+}
 /*
   function drawScrollingBackground() {
     // Dessiner les deux images côte à côte
@@ -205,236 +177,311 @@ function checkBonusCollision() {
   }
     */
 
-  function drawBackground() {
+//generer les obstacles
+function generateObstacle() {
+  const obstacle = {
+    x: canva.width,
+    width: 40 + Math.floor(Math.random()*10),
+    height: 20 + Math.floor(Math.random()*50),
+  };
+  obstacles.push(obstacle); // Ajoute le nouvel obstacle au tableau
+}
 
+function drawObstacles() {
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const obstacle = obstacles[i];
 
-    backgrounds.forEach((background) => {
-      if (background.x + background.width < 0) {
-        background.x = canva.width + Math.floor(Math.random() * 300); // Réinitialise l'obstacle à une position aléatoire
-        background.width = 50 + Math.floor(Math.random() * 50); // Taille aléatoire
-        background.height = 200 + Math.floor(Math.random() * 50);
+    // Déplace l'obstacle
+    if (!isSlow) {
+      obstacle.x -= speed;
+    } else {
+      obstacle.x -= baseSpeed;
+    }
+
+    // Dessine l'obstacle
+    context.fillStyle = "black";
+    context.fillRect(
+      obstacle.x,
+      groundY - obstacle.height,
+      obstacle.width,
+      obstacle.height
+    );
+
+    // Supprime l'obstacle s'il sort de l'écran
+    if (obstacle.x + obstacle.width < 0) {
+      obstacles.splice(i, 1); // Retire l'obstacle du tableau
+      score++;
+      if (score %5 === 0){
+        scoreDisplay++
+      } // Incrémente le score
+    }
+  }
+}
+
+function checkObstaclesCollision() {
+  for (const obstacle of obstacles) {
+    if (!isInvincible) {
+      const ballBottom = ballY + 10;
+      const ballTop = ballY - 10; // Haut de la balle
+      const ballRight = 100 + 10;
+      const ballLeft = 100 - 10;
+
+      const obstacleTop = groundY - obstacle.height;
+      const obstacleLeft = obstacle.x;
+      const obstacleRight = obstacle.x + obstacle.width;
+
+      // Collision avec le haut du bloc
+      if (
+        ballBottom > obstacleTop &&
+        ballTop < obstacleTop + 1 &&
+        ballRight > obstacleLeft &&
+        ballLeft < obstacleRight
+      ) {
+        ballY = obstacleTop - 10; // Place la balle sur le bloc
+        velocityY = 0; // Arrête la gravité
+        isOnBlock = true;
+      } else if (
+        ballRight > obstacleLeft &&
+        ballLeft < obstacleRight &&
+        ballBottom > obstacleTop
+      ) {
+        console.log("Collision détectée !");
+        isGameOver = true; // Déclenche le Game Over
+        start = false;
+        break;
       }
-      context.fillStyle = "grey";
-      context.fillRect(
-        background.x,
-        groundY - (background.height),
-        background.width,
-        background.height
-      );
+    }
+  }
+}
 
+function drawBackground() {
+  backgrounds.forEach((background) => {
+    if (background.x + background.width < 0) {
+      background.x = canva.width + Math.floor(Math.random() * 300); // Réinitialise l'obstacle à une position aléatoire
+      background.width = 50 + Math.floor(Math.random() * 50); // Taille aléatoire
+      background.height = 200 + Math.floor(Math.random() * 50);
+    }
+    context.fillStyle = "grey";
+    context.fillRect(
+      background.x,
+      groundY - background.height,
+      background.width,
+      background.height
+    );
 
-      // Mouvement des rectangles
-      if(isSlow){
-        background.x -= baseSpeed;
-      }else{
-        background.x -= baseSpeed * 0.1;
-      }
-       // Moins rapide pour simuler la distance
-      //backgroundX2 -= baseSpeed; // Un peu plus rapide
+    // Mouvement des rectangles
+    if (isSlow) {
+      background.x -= baseSpeed;
+    } else {
+      background.x -= baseSpeed * 0.1;
+    }
+    // Moins rapide pour simuler la distance
+    //backgroundX2 -= baseSpeed; // Un peu plus rapide
 
-      // Réinitialisation pour la répétition
-      if (background.x + canva.width < 0) {
-        background.x = canva.width;
-      }
-      /*if (backgroundX2 + canva.width < 0) {
+    // Réinitialisation pour la répétition
+    if (background.x + canva.width < 0) {
+      background.x = canva.width;
+    }
+    /*if (backgroundX2 + canva.width < 0) {
         backgroundX2 = canva.width;
       }*/
-    });
+  });
+}
 
-
+function updateGame() {
+  if (isGameOver) {
+    // Afficher l'écran de Game Over
+    context.fillStyle = "black";
+    context.font = "40px Arial";
+    context.textAlign = "center";
+    context.fillText("Game Over", canva.width / 2, canva.height / 2);
+    context.font = "20px Arial";
+    context.fillText(
+      "Press R to Restart",
+      canva.width / 2,
+      canva.height / 2 + 40
+    );
+    return; // Arrête la boucle du jeu
   }
 
-  function updateGame() {
-    if (isGameOver) {
-      // Afficher l'écran de Game Over
-      context.fillStyle = "black";
-      context.font = "40px Arial";
-      context.textAlign = "center";
-      context.fillText("Game Over", canva.width / 2, canva.height / 2);
-      context.font = "20px Arial";
-      context.fillText(
-        "Press R to Restart",
-        canva.width / 2,
-        canva.height / 2 + 40
-      );
-      return; // Arrête la boucle du jeu
+  context.clearRect(0, 0, canva.width, canva.height);
+
+  //drawScrollingBackground();
+  drawBackground();
+  drawBonus();
+  updateBonus();
+
+  start = true;
+
+  //Dessine la boule
+  context.fillStyle = "black";
+  context.beginPath();
+  context.arc(100, ballY, 10, 0, Math.PI * 2);
+  context.fill();
+
+  //Dessine le sol
+  context.beginPath(); // Start a new path
+  context.moveTo(0, 300); // Move the pen to (30, 50)
+  context.lineTo(800, 300); // Draw a line to (150, 100)
+  context.lineWidth = 5;
+  context.stroke(); // Render the path
+
+  //gravité
+  velocityY += gravity;
+  ballY += velocityY;
+
+  //Collision avec le sol
+  if (ballY > groundY - 10) {
+    ballY = groundY - 10; // Reste au sol
+    velocityY = 0; //Stop le mouvement
+  }
+
+  //Ajuster la vitess en fonction du score
+
+  if (speed > 15) {
+    speed = 15;
+    console.log(speed);
+  } else {
+    speed = baseSpeed + 0.2 * Math.floor(scoreDisplay / 5);
+    console.log(speed);
+  }
+
+  detectBeats(() => {
+    generateObstacle(); // Génère un nouvel obstacle sur chaque beat détecté
+  });
+
+  drawObstacles();
+
+  
+
+  checkObstaclesCollision();
+
+  /*
+  //Dessine les obstacles
+  obstacles.forEach((obstacle) => {
+    if (!isSlow) {
+      obstacle.x -= speed;
+    } else {
+      obstacle.x -= baseSpeed;
     }
 
-    context.clearRect(0, 0, canva.width, canva.height);
-
-    //drawScrollingBackground();
-    drawBackground();
-    drawBonus();
-    updateBonus();
-
-    start = true;
-
-    //Dessine la boule
+    if (obstacle.x + obstacle.width < 0) {
+      obstacle.x = canva.width + Math.floor(Math.random() * 300); // Réinitialise l'obstacle à une position aléatoire
+      obstacle.width = 10 + Math.floor(Math.random() * 50); // Taille aléatoire
+      obstacle.height = 10 + Math.floor(Math.random() * 50);
+      score++;
+    }
     context.fillStyle = "black";
-    context.beginPath();
-    context.arc(100, ballY, 10, 0, Math.PI * 2);
-    context.fill();
+    context.fillRect(
+      obstacle.x,
+      groundY - obstacle.height,
+      obstacle.width,
+      obstacle.height
+    );
 
-    //Dessine le sol
-    context.beginPath(); // Start a new path
-    context.moveTo(0, 300); // Move the pen to (30, 50)
-    context.lineTo(800, 300); // Draw a line to (150, 100)
-    context.lineWidth = 5;
-    context.stroke(); // Render the path
+    // Détection de collision avec le haut du bloc
+    if (!isInvincible) {
+      const ballBottom = ballY + 10;
+      const ballTop = ballY - 10; // Haut de la balle
+      const ballRight = 100 + 10;
+      const ballLeft = 100 - 10;
 
+      const obstacleTop = groundY - obstacle.height;
+      const obstacleLeft = obstacle.x;
+      const obstacleRight = obstacle.x + obstacle.width;
 
-    //gravité
-    velocityY += gravity;
-    ballY += velocityY;
-
-
-    //Collision avec le sol
-    if (ballY > groundY - 10) {
-      ballY = groundY - 10; // Reste au sol
-      velocityY = 0; //Stop le mouvement
+      //collision haut de block
+      if (
+        ballBottom > obstacleTop &&
+        ballTop < obstacleTop + 1 &&
+        ballRight > obstacleLeft &&
+        ballLeft < obstacleRight
+      ) {
+        ballY = obstacleTop - 10; // Place la balle sur le bloc
+        velocityY = 0; // Arrête la gravité
+        isOnBlock = true;
+      } else if (
+        ballRight > obstacleLeft &&
+        ballLeft < obstacleRight &&
+        ballBottom > obstacleTop
+      ) {
+        console.log("Collision détectée !");
+        isGameOver = true; // Déclenche le Game Over
+        start = false;
+      }
     }
+  });*/
 
-    //Ajuster la vitess en fonction du score
-    
-    if (speed > 15) {
-      speed = 15;
-      console.log(speed)
-    }else{
-      speed = baseSpeed + (0.2 * (Math.floor(score / 5)));
-      console.log(speed)
-    }
-
-    //Dessine les obstacles
-    obstacles.forEach((obstacle) => {
-      if (!isSlow) {
-        obstacle.x -= speed;
-      } else {
-        obstacle.x -= baseSpeed;
-      }
-
-      if (obstacle.x + obstacle.width < 0) {
-        obstacle.x = canva.width + Math.floor(Math.random() * 300); // Réinitialise l'obstacle à une position aléatoire
-        obstacle.width = 10 + Math.floor(Math.random() * 50); // Taille aléatoire
-        obstacle.height = 10 + Math.floor(Math.random() * 50);
-        score++;
-
-      }
-      context.fillStyle = "black";
-      context.fillRect(
-        obstacle.x,
-        groundY - (obstacle.height),
-        obstacle.width,
-        obstacle.height
-      );
-
-
-      // Détection de collision avec le haut du bloc
-      if (!isInvincible) {
-        const ballBottom = ballY + 10;
-        const ballTop = ballY - 10; // Haut de la balle
-        const ballRight = 100 + 10;
-        const ballLeft = 100 - 10;
-
-        const obstacleTop = groundY - obstacle.height;
-        const obstacleLeft = obstacle.x;
-        const obstacleRight = obstacle.x + obstacle.width;
-
-        //collision haut de block
-        if (
-          ballBottom > obstacleTop &&
-          ballTop < obstacleTop + 1 &&
-          ballRight > obstacleLeft &&
-          ballLeft < obstacleRight
-        ) {
-          ballY = obstacleTop - 10; // Place la balle sur le bloc
-          velocityY = 0; // Arrête la gravité
-          isOnBlock = true;
-        } else if (
-          ballRight > obstacleLeft &&
-          ballLeft < obstacleRight &&
-          ballBottom > obstacleTop
-        ) {
-          console.log("Collision détectée !");
-          isGameOver = true; // Déclenche le Game Over
-          start = false;
-        }
-
-      }
-
-    });
-
-    // Réactiver la gravité si la balle quitte le bloc
-    /*if (!isOnBlock) {
+  // Réactiver la gravité si la balle quitte le bloc
+  /*if (!isOnBlock) {
       velocityY += gravity;
     }*/
 
-    checkBonusCollision();
-    updateInvincibility();
-    updateSlow();
+  checkBonusCollision();
+  updateInvincibility();
+  updateSlow();
 
-    // Gérer l'apparition du bonus à chaque multiple de 25 points
-    if (score >= 25 && score % 25 === 0 && !bonus) {
-      bonusType = "invincible";
-      generateBonus();
-    } else if (score >= 30 && score % 20 === 0 && !bonus) {
-      bonusType = "slow";
-      generateBonus();
-    }
-
-    // Indicateur de bonus
-    if (isInvincible) {
-      context.fillStyle = "black";
-      context.font = "40px Arial";
-      context.textAlign = "center";
-      context.fillText("INVINCIBLE", canva.width / 2, canva.height / 2);
-      context.font = "20px Arial";
-    } else if (isSlow) {
-      context.fillStyle = "black";
-      context.font = "40px Arial";
-      context.textAlign = "center";
-      context.fillText("SLOW", canva.width / 2, canva.height / 2);
-      context.font = "20px Arial";
-    }
-
-    //Affichage du score
-    context.font = "16px serif";
-    context.fillText("Score: " + score, 600, 20);
-
-
-    requestAnimationFrame(updateGame);
-    
+  // Gérer l'apparition du bonus à chaque multiple de 25 points
+  if (score >= 25 && score % 25 === 0 && !bonus) {
+    bonusType = "invincible";
+    generateBonus();
+  } else if (score >= 30 && score % 20 === 0 && !bonus) {
+    bonusType = "slow";
+    generateBonus();
   }
 
-  function restartGame() {
-    //Réinitialise les variables
-    score = 0;
-    speed = baseSpeed;
-    isGameOver = false;
-    obstacles.forEach((obstacle) => {
-      obstacle.x = canva.width + Math.floor(Math.random() * 300); // Réinitialise l'obstacle à une position aléatoire
-      obstacle.width = 10 + Math.floor(Math.random() * 40); // Taille aléatoire
-      obstacle.height = 10 + Math.floor(Math.random() * 40);
-    });
-    ballY = groundY;
-    velocityY = 0;
-    isOnBlock = false;
+  // Indicateur de bonus
+  if (isInvincible) {
+    context.fillStyle = "black";
+    context.font = "40px Arial";
+    context.textAlign = "center";
+    context.fillText("INVINCIBLE", canva.width / 2, canva.height / 2);
+    context.font = "20px Arial";
+  }
+  if (isSlow) {
+    context.fillStyle = "black";
+    context.font = "40px Arial";
+    context.textAlign = "center";
+    context.fillText("SLOW", canva.width / 2, canva.height / 2);
+    context.font = "20px Arial";
+  }
 
+  //Affichage du score
+  context.font = "16px serif";
+  context.fillText("Score: " + scoreDisplay, 600, 20);
+
+  requestAnimationFrame(updateGame);
+}
+
+function restartGame() {
+  //Réinitialise les variables
+  score = 0;
+  speed = baseSpeed;
+  isGameOver = false;
+  obstacles.forEach((obstacle) => {
+    obstacle.x = canva.width + Math.floor(Math.random() * 300); // Réinitialise l'obstacle à une position aléatoire
+    obstacle.width = 10 + Math.floor(Math.random() * 40); // Taille aléatoire
+    obstacle.height = 10 + Math.floor(Math.random() * 40);
+  });
+  ballY = groundY;
+  velocityY = 0;
+  isOnBlock = false;
+
+  updateGame();
+}
+
+document.addEventListener("keydown", (e) => {
+  if ((e.key === "s" && !start) || (e.key === "S" && !start)) {
+    // Démarrer le jeu après interaction
+    initializeAudio();
     updateGame();
   }
+});
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "s" && !start || e.key === "S" && !start) {    
-      // Démarrer le jeu après interaction
-      initializeAudio();
-      updateGame();
-      
-    }
-  });
-
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "r" && isGameOver || e.key === "R" && isGameOver) {
-          // Démarrer le jeu après interaction
-      initializeAudio();
-      restartGame();
-    }
-  });
+window.addEventListener("keydown", (e) => {
+  if ((e.key === "r" && isGameOver) || (e.key === "R" && isGameOver)) {
+    // Démarrer le jeu après interaction
+    initializeAudio();
+    restartGame();
+  }
+});

@@ -8,13 +8,9 @@ var audioElement;
 // Charger la musique de fond et configurer l'analyser
 export function initializeAudio() {
 
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        console.log("hey")
-        
-    }
+    if (!audioContext && !audioSource) {
 
-    if (!audioSource) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
         audioElement = document.querySelector('audio');
         audioSource = audioContext.createMediaElementSource(audioElement);
         analyser = audioContext.createAnalyser();
@@ -26,7 +22,6 @@ export function initializeAudio() {
 
         // Tableau pour stocker les données audio
         dataArray = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteFrequencyData(dataArray);
         
         console.log('Données audio :', dataArray);
         console.log("ho")
@@ -37,18 +32,24 @@ export function initializeAudio() {
 
 // Détection des beats
 export function detectBeats(callback) {
-    if (!analyser) return;
+    if (!analyser) 
+        {console.log("HeyHo") 
+            return;
+
+        }
+
+        console.log("HIHI")
 
     analyser.getByteFrequencyData(dataArray);
     
 
-    const threshold = 100; // Seuil pour détecter un beat
+    const threshold = 120; // Seuil pour détecter un beat
     let beatDetected = false;
-    console.log(dataArray)
+    
 
     // Analyser les basses fréquences
     for (let i = 0; i < dataArray.length / 4; i++) {
-        if (dataArray[i] > threshold) {
+        if (dataArray[i] === threshold) {
             beatDetected = true;
             break;
         }
@@ -57,8 +58,7 @@ export function detectBeats(callback) {
     // Appeler le callback si un beat est détecté
     if (beatDetected) {
         callback();
+        console.log('Données audio :', dataArray)
     }
 
-    // Appeler la fonction à chaque frame
-    requestAnimationFrame(() => detectBeats(callback));
-}
+   }
