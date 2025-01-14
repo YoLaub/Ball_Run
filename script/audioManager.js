@@ -10,6 +10,7 @@ export function initializeAudio(backgroundMusic) {
 
     if (!audioContext && !audioSource) {
 
+        backgroundMusic.play();
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         audioElement = backgroundMusic;
         audioSource = audioContext.createMediaElementSource(audioElement);
@@ -24,9 +25,7 @@ export function initializeAudio(backgroundMusic) {
         dataArray = new Uint8Array(analyser.frequencyBinCount);
         
         console.log('Données audio :', dataArray);
-        console.log("ho")
-        backgroundMusic.play();
-
+              
     }
     backgroundMusic.play();
 }
@@ -34,12 +33,12 @@ export function initializeAudio(backgroundMusic) {
 // Détection des beats
 export function detectBeats(callback) {
     if (!analyser) 
-        {console.log("HeyHo") 
+        { 
             return;
 
         }
 
-        console.log("HIHI")
+        
 
     analyser.getByteFrequencyData(dataArray);
     
@@ -49,7 +48,7 @@ export function detectBeats(callback) {
     
 
     // Analyser les basses fréquences
-    for (let i = 0; i < Math.floor(dataArray.length/10); i++) {
+    for (let i = 0; i < Math.floor(dataArray.length/10); i+=2) {
         if (dataArray[i] >= 200 && dataArray[i] <= threshold) {
             beatDetected = true;
             break;
@@ -62,6 +61,11 @@ export function detectBeats(callback) {
         console.log('Données audio :', dataArray)
     }
 
+   }
+
+   export function getCurrentFrequency(){
+    let currentFrequency = dataArray[0];
+    return currentFrequency
    }
 
    export function drawB(context,canvas) {

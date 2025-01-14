@@ -1,4 +1,4 @@
-import { initializeAudio, detectBeats, drawB } from "./audioManager.js";
+import { initializeAudio, detectBeats, drawB, getCurrentFrequency } from "./audioManager.js";
 
 var canva = document.getElementById("gameCanvas");
 const context = canva.getContext("2d");
@@ -43,7 +43,7 @@ bgImage2.src = "images/bckg2.jpg";
 //Obstacles
 var obstacles = [];
 //Vitesse
-var baseSpeed = 3;
+var baseSpeed = 2;
 var speed = baseSpeed;
 
 //Bonus
@@ -166,13 +166,15 @@ function checkBonusCollision() {
 function activateInvincibility() {
   isInvincible = true;
   invincibilityTimer = 300; // 300 frames (environ 5 secondes si 60 FPS)
+
 }
 
 function updateInvincibility() {
   if (isInvincible) {
     invincibilityTimer--;
     if (invincibilityTimer <= 0) {
-      isInvincible = false; // Fin de l'invincibilité
+      isInvincible = false;
+      // Fin de l'invincibilité
     }
   }
 }
@@ -215,49 +217,54 @@ function updateSlow() {
     */
 
 //Generer les particules
-function generateParticules(){
-  const particule = { x: canva.width, y: Math.random()*(groundY - 100), width: 5, height: 1 };
+function generateParticules() {
+  const particule = { x: canva.width, y: Math.random() * (groundY), width: 3, height: 1 };
   particules.push(particule)
- 
+
 }
 
 function drawParticule() {
   particules.forEach((particule) => {
-      if (!isSlow) {
-      particule.x -= speed;
+
+    let i = particule;
+    if (!isSlow) {
+      particule.x -= speed * 0.3;
     } else {
-      particule.x -= baseSpeed;
+      particule.x -= baseSpeed * 0.3;
     }
-    if (particule.x + particule.width < 0) {
-      particule.x = canva.width * (Math.random() * 400);
-      particule.y = Math.random() * (groundY - 300);
-      particule.width = 10 + scoreDisplay;
-      particule.height = 2;
-    }
+
 
     context.fillStyle = "#f0f0f2";
     context.fillRect(
       particule.x,
       particule.y,
-      particule.width,
+      particule.width + 0.1,
       particule.height
     );
+
+    if (particule.x + particule.width < 0) {
+      particules.splice(i, 1); // Retire l'obstacle du tableau
+      score++;
+    }
   });
 }
 
+
+
 //generer les obstacles
 function generateObstacle() {
-  const obstacle = {
+  let obstacle = {
     x: canva.width,
     width: 20 + Math.floor(Math.random() * 10),
-    height: 10 + Math.floor(Math.random() * 50),
+    height: (getCurrentFrequency() / 4) - (Math.floor(Math.random() * 10)),
   };
   obstacles.push(obstacle); // Ajoute le nouvel obstacle au tableau
 }
 
 function drawObstacles() {
-  for (let i = obstacles.length - 1; i >= 0; i--) {
-    const obstacle = obstacles[i];
+  for (let i = obstacles.length - 5; i >= 0; i--) {
+
+    let obstacle = obstacles[i];
 
     // Déplace l'obstacle
     if (!isSlow) {
@@ -287,16 +294,16 @@ function drawObstacles() {
 }
 
 function checkObstaclesCollision() {
-  for (const obstacle of obstacles) {
+  for (let obstacle of obstacles) {
     if (!isInvincible) {
-      const ballBottom = ballY + 10;
-      const ballTop = ballY - 10; // Haut de la balle
-      const ballRight = 100 + 10;
-      const ballLeft = 100 - 10;
+      let ballBottom = ballY + 10;
+      let ballTop = ballY - 10; // Haut de la balle
+      let ballRight = 100 + 10;
+      let ballLeft = 100 - 10;
 
-      const obstacleTop = groundY - obstacle.height;
-      const obstacleLeft = obstacle.x;
-      const obstacleRight = obstacle.x + obstacle.width;
+      let obstacleTop = groundY - obstacle.height;
+      let obstacleLeft = obstacle.x;
+      let obstacleRight = obstacle.x + obstacle.width;
 
       // Collision avec le haut du bloc
       if (
@@ -404,10 +411,17 @@ function updateGame() {
   ballY += velocityY;
 
   //Collision avec le sol
-  if (ballY > groundY - 10) {
-    ballY = groundY - 10; // Reste au sol
-    velocityY = 0; //Stop le mouvement
+  if (isInvincible) {
+    ballY = groundY - 150; // Reste au sol
+    velocityY = 0;
+
+  } else {
+    if (ballY > groundY - 10) {
+      ballY = groundY - 10; // Reste au sol
+      velocityY = 0; //Stop le mouvement
+    }
   }
+
 
   //Ajuster la vitess en fonction du score
 
@@ -415,7 +429,7 @@ function updateGame() {
     speed = 15;
     console.log(speed);
   } else {
-    speed = baseSpeed + 0.2 * Math.floor(scoreDisplay / 5);
+    speed = baseSpeed + 0.1 * Math.floor(scoreDisplay / 5);
   }
 
   detectBeats(() => {
