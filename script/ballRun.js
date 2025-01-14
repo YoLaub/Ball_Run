@@ -19,7 +19,7 @@ var velocityY = 0;
 const gravity = 0.3;
 const maxJumpPower = -15;
 const jumpPower = -10;
-const minJumpPower = -2
+const minJumpPower = -2;
 const groundY = 300;
 var isOnBlock = false;
 
@@ -55,6 +55,8 @@ var invincibilityTimer = 0;
 var isSlow = false;
 var slowTimer = 0;
 
+//Particule
+var particules = [];
 //Son
 //const soundJump = new Audio("sound/jump.mp3")
 
@@ -64,43 +66,43 @@ var doubleJumpAvailable = true;
 
 document.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
-    if ((ballY === groundY - 10 || isOnBlock)) {
+    if (ballY === groundY - 10 || isOnBlock) {
       velocityY = jumpPower;
       //soundJump.play();
       isOnBlock = false; // La balle quitte le bloc
       doubleJumpAvailable = true;
-    }else if(doubleJumpAvailable){
+    } else if (doubleJumpAvailable) {
       velocityY = jumpPower + 2;
-      doubleJumpAvailable = false
+      doubleJumpAvailable = false;
     }
 
-    if(e.code === "Space" && jumpStartTime === null){
+    if (e.code === "Space" && jumpStartTime === null) {
       jumpStartTime = Date.now();
-      
     }
-
   }
 });
 
 document.addEventListener("keyup", (e) => {
-  if (e.code === "Space" && jumpStartTime != null){
+  if (e.code === "Space" && jumpStartTime != null) {
     let pressDuration = (Date.now() - jumpStartTime) / 1000;
     jumpStartTime = null;
 
-    let jumpPowerModulated = Math.max(maxJumpPower, minJumpPower - pressDuration * 10);
+    let jumpPowerModulated = Math.max(
+      maxJumpPower,
+      minJumpPower - pressDuration * 10
+    );
 
-    if(ballY === groundY -10 || isOnBlock){
+    if (ballY === groundY - 10 || isOnBlock) {
       velocityY = jumpPowerModulated;
       isOnBlock = false;
       doubleJumpAvailable = true;
-    }else if(doubleJumpAvailable){
+    } else if (doubleJumpAvailable) {
       velocityY = jumpPowerModulated;
     }
   }
-})
+});
 
-
-const backgroundMusic = new Audio("musique/backgroundMusique.mp3");
+const backgroundMusic = new Audio("musique/test3.mp3");
 backgroundMusic.loop = true; // Répète la musique en boucle
 backgroundMusic.volume = 1; // Ajuste le volume
 
@@ -212,12 +214,43 @@ function updateSlow() {
   }
     */
 
+//Generer les particules
+function generateParticules(){
+  const particule = { x: canva.width, y: Math.random()*(groundY - 100), width: 5, height: 1 };
+  particules.push(particule)
+ 
+}
+
+function drawParticule() {
+  particules.forEach((particule) => {
+      if (!isSlow) {
+      particule.x -= speed;
+    } else {
+      particule.x -= baseSpeed;
+    }
+    if (particule.x + particule.width < 0) {
+      particule.x = canva.width * (Math.random() * 400);
+      particule.y = Math.random() * (groundY - 300);
+      particule.width = 10 + scoreDisplay;
+      particule.height = 2;
+    }
+
+    context.fillStyle = "#f0f0f2";
+    context.fillRect(
+      particule.x,
+      particule.y,
+      particule.width,
+      particule.height
+    );
+  });
+}
+
 //generer les obstacles
 function generateObstacle() {
   const obstacle = {
     x: canva.width,
-    width: 40 + Math.floor(Math.random() * 10),
-    height: 20 + Math.floor(Math.random() * 50),
+    width: 20 + Math.floor(Math.random() * 10),
+    height: 10 + Math.floor(Math.random() * 50),
   };
   obstacles.push(obstacle); // Ajoute le nouvel obstacle au tableau
 }
@@ -247,7 +280,7 @@ function drawObstacles() {
       obstacles.splice(i, 1); // Retire l'obstacle du tableau
       score++;
       if (score % 10 === 0) {
-        scoreDisplay++
+        scoreDisplay++;
       } // Incrémente le score
     }
   }
@@ -282,7 +315,6 @@ function checkObstaclesCollision() {
       ) {
         console.log("Collision détectée !");
         isGameOver = true; // Déclenche le Game Over
-        
 
         start = false;
         break;
@@ -338,16 +370,18 @@ function updateGame() {
       canva.width / 2,
       canva.height / 2 + 40
     );
-    backgroundMusic.pause()
+    backgroundMusic.pause();
     return; // Arrête la boucle du jeu
   }
 
   context.clearRect(0, 0, canva.width, canva.height);
 
   //drawScrollingBackground();
-  drawB(context,canva)
+  drawB(context, canva);
   //drawBackground();
   drawBonus();
+  generateParticules();
+  drawParticule();
   updateBonus();
 
   start = true;
@@ -389,8 +423,6 @@ function updateGame() {
   });
 
   drawObstacles();
-
-
 
   checkObstaclesCollision();
 
@@ -473,32 +505,32 @@ function updateGame() {
     context.fillStyle = "black";
     context.font = "40px Arial";
     context.textAlign = "center";
-    context.fillText("INVINCIBLE", canva.width / 2, 100 );
+    context.fillText("INVINCIBLE", canva.width / 2, 100);
     context.font = "20px Arial";
   }
   if (isSlow) {
     context.fillStyle = "black";
     context.font = "40px Arial";
     context.textAlign = "center";
-    context.fillText("SLOW", canva.width / 2, 100 );
+    context.fillText("SLOW", canva.width / 2, 100);
     context.font = "20px Arial";
   }
 
-  if (speed > 10 ){
+  if (speed > 10) {
     context.fillStyle = "black";
     context.font = "40px Arial";
     context.textAlign = "center";
-    context.fillText("YOU ARE FAST!!", canva.width / 2, canva.height );
+    context.fillText("YOU SO ARE FAST!!", canva.width / 2, canva.height);
     context.font = "20px Arial";
   }
-  if (speed > 5 && speed < 10){
+  if (speed > 5 && speed < 10) {
     context.fillStyle = "black";
     context.font = "40px Arial";
     context.textAlign = "center";
-    context.fillText("GO FAST!!", canva.width / 2, canva.height );
+    context.fillText("GO FAST!!", canva.width / 2, canva.height);
     context.font = "20px Arial";
   }
-  if (speed < 4 ){
+  if (speed < 4) {
     context.fillStyle = "black";
     context.font = "40px Arial";
     context.textAlign = "center";
@@ -519,13 +551,11 @@ function restartGame() {
   scoreDisplay = 0;
   speed = baseSpeed;
   isGameOver = false;
-  obstacles = []
+  obstacles = [];
   ballY = groundY;
   velocityY = 0;
   isOnBlock = false;
   updateGame();
-
-  
 }
 
 document.addEventListener("keydown", (e) => {

@@ -49,7 +49,7 @@ export function detectBeats(callback) {
     
 
     // Analyser les basses fréquences
-    for (let i = 0; i < dataArray.length/10; i++) {
+    for (let i = 0; i < Math.floor(dataArray.length/10); i++) {
         if (dataArray[i] >= 200 && dataArray[i] <= threshold) {
             beatDetected = true;
             break;
