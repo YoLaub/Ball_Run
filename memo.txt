@@ -1,0 +1,6 @@
+memoriser score
+memoriser nombre de gameOver
+Afficher la fin lors dela fin de la musique
+faire s'arreter le jeu lors de la fin de la music
+ajouter des bonus de score
+Optimiser la vitesse
