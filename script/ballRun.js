@@ -17,10 +17,11 @@ var start = false;
 var isGameOver = false;
 var gameOver = 0;
 var animationId = null;
-var endGame = false;
+
+
 // Variables pour gérer le message de fin
 let messageFinActive = false;
-let messageFinX = canva.width; // Point de départ à droite de l'écran
+let messageFinX = canva.width;
 const messageFinText = "Fin";
 const messageFinSpeed = 2;
 
@@ -117,18 +118,22 @@ const backgroundMusic = new Audio("musique/test.mp3");
 backgroundMusic.volume = 1; // Ajuste le volume
 
 backgroundMusic.addEventListener('ended', () => {
-  messageFinActive = true
+  messageFinActive = true;
+  drawEndMessage()
   console.log("ended")
-  })
+})
 
 //Generer les bonus
 function generateBonus() {
-  bonus = {
-    x: canva.width,
-    y: Math.random() * (groundY - 50), // Position aléatoire au-dessus du sol
-    width: 20,
-    height: 20,
-  };
+  if(!messageFinActive){
+    bonus = {
+      x: canva.width,
+      y: Math.random() * (groundY - 50), // Position aléatoire au-dessus du sol
+      width: 20,
+      height: 20,
+    };
+  }
+  
 }
 
 function drawBonus() {
@@ -364,18 +369,17 @@ function drawBackground() {
 
 // Fonction pour dessiner le message "Fin"
 function drawEndMessage() {
-  if (messageFinActive) {
-    context.font = "48px Arial";
-    context.fillStyle = "black";
-    context.fillText(messageFinText, messageFinX, canva.height / 2);
-    messageFinX -= messageFinSpeed;
-    console.log("hi")
-    // Vérifier si le message est complètement sorti de l'écran
-    if (messageFinX  === canva.height / 2) {
-      console.log("ho")
-      stopGame(); // Arrêter le jeu
-    }
+
+  context.font = "48px Arial";
+  context.fillStyle = "black";
+  context.fillText(messageFinText, messageFinX, canva.height / 2);
+  messageFinX -= messageFinSpeed;
+  
+  // Vérifier si le message est complètement sorti de l'écran
+  if (messageFinX + context.measureText(messageFinText).width < canva.width / 2) {
+    stopGame(); // Arrêter le jeu
   }
+
 }
 
 
@@ -398,7 +402,7 @@ function updateGame() {
 
   context.clearRect(0, 0, canva.width, canva.height);
 
- 
+
 
   //drawScrollingBackground();
   drawB(context, canva);
@@ -447,15 +451,15 @@ function updateGame() {
     speed = baseSpeed + 0.1 * Math.floor(scoreDisplay / 5);
   }
 
-  if (!modeTest){
+  if (!modeTest) {
     detectBeats(() => {
       generateObstacle(); // Génère un nouvel obstacle sur chaque beat détecté
     });
     drawObstacles();
   }
 
- 
-  
+
+
   checkObstaclesCollision();
   checkBonusCollision();
   updateInvincibility();
@@ -512,20 +516,22 @@ function updateGame() {
   context.font = "16px serif";
   context.fillText("Score: " + scoreDisplay, 600, 20);
 
-  if (!messageFinActive) {
-    animationId = requestAnimationFrame(updateGame);
-  }else {
+
+  animationId = requestAnimationFrame(updateGame);
+
+  if(messageFinActive){
     drawEndMessage();
   }
 
-   // Toujours vérifier et dessiner le message de fin si nécessaire
 
-  
+  // Toujours vérifier et dessiner le message de fin si nécessaire
+
+
 }
 
 function stopGame() {
   cancelAnimationFrame(animationId)
-  endGame = true;
+
   context.clearRect(0, 0, canva.width, canva.height);
 
   context.fillStyle = "black";
