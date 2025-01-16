@@ -1,4 +1,5 @@
 import { initializeAudio, detectBeats, drawB, getCurrentFrequency } from "./audioManager.js";
+import {fetchUsers, getValueWeather} from "./meteoSource.js";
 
 var canva = document.getElementById("gameCanvas");
 const context = canva.getContext("2d");
@@ -66,6 +67,25 @@ var invincibilityTimer = 0;
 
 var isSlow = false;
 var slowTimer = 0;
+
+//METEO
+
+
+async function weather() {
+  try {
+    const weatherData = await getValueWeather();
+    console.log(weatherData);
+    let weather = weatherData;
+    return weather
+  } catch (error) {
+    console.error('Erreur lors de la récupération des données météorologiques:', error);
+  }
+}
+
+weather();
+
+console.log(weather());
+
 
 //Particule
 var particules = [];
@@ -374,6 +394,32 @@ function drawBackground() {
 }
 */
 
+ //DESSIN NUAGE
+ function generateClouds(){
+  let quantityCloud = Math.floor(weather().nebulosity)
+  for (let i = 0 ; i < quantityCloud/10 ; i++){
+    let x = Math.random()*600;
+    let y = (Math.random())*150;
+    let size = (Math.random())*quantityCloud
+    drawCloud(x, y, size)
+  }
+}
+
+function drawCloud(x, y, size) {
+  context.fillStyle = '#FFFFFF'; // Couleur blanche pour le nuage
+  context.beginPath();
+
+  // Dessiner les cercles du nuage
+  context.arc(x, y, size, 0, Math.PI * 2); // Cercle principal
+  context.arc(x + size * 0.7, y - size * 0.4, size * 0.8, 0, Math.PI * 2);
+  context.arc(x - size * 0.7, y - size * 0.4, size * 0.8, 0, Math.PI * 2);
+  context.arc(x + size * 0.4, y + size * 0.4, size * 0.7, 0, Math.PI * 2);
+  context.arc(x - size * 0.4, y + size * 0.4, size * 0.7, 0, Math.PI * 2);
+
+  context.closePath();
+  context.fill();
+}
+
 // Fonction pour dessiner le message "Fin"
 function drawEndMessage() {
 
@@ -415,12 +461,18 @@ function updateGame() {
   drawB(context, canva);
   //drawBackground();
   drawBonus();
-  generateParticules();
-  drawParticule();
+  if(weather().pressure <= 1010){
+    generateParticules();
+    drawParticule();
+  }
+  generateClouds()
+  
+  
   updateBonus();
 
   start = true;
 
+ 
   //Dessine la boule
   context.fillStyle = "black";
   context.beginPath();
@@ -528,6 +580,9 @@ function updateGame() {
   //Affichage du score
   context.font = "16px serif";
   context.fillText("Score: " + scoreDisplay, 600, 20);
+  //Temperature
+  context.font = "16px serif";
+  context.fillText("Temperature: " + weather().temperature, 600, 30);
 
 
   animationId = requestAnimationFrame(updateGame);
@@ -578,6 +633,7 @@ document.addEventListener("keydown", (e) => {
     // Démarrer le jeu après interaction
     initializeAudio(backgroundMusic);
     updateGame();
+    fetchUsers()
   }
 });
 

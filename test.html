@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dessiner un Nuage</title>
+    <style>
+        canvas {
+            display: block;
+            margin: auto;
+            background-color: #87CEEB; /* Couleur de ciel */
+        }
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="400"></canvas>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function drawCloud(x, y, size) {
+        ctx.fillStyle = '#FFFFFF'; // Couleur blanche pour le nuage
+        ctx.beginPath();
+
+        // Dessiner les cercles du nuage
+        ctx.arc(x, y, size, 0, Math.PI * 2); // Cercle principal
+        ctx.arc(x + size * 0.7, y - size * 0.4, size * 0.8, 0, Math.PI * 2);
+        ctx.arc(x - size * 0.7, y - size * 0.4, size * 0.8, 0, Math.PI * 2);
+        ctx.arc(x + size * 0.4, y + size * 0.4, size * 0.7, 0, Math.PI * 2);
+        ctx.arc(x - size * 0.4, y + size * 0.4, size * 0.7, 0, Math.PI * 2);
+
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Exemple de position fixe pour les nuages
+        drawCloud(200, 100, 40);
+        drawCloud(400, 150, 50);
+        drawCloud(600, 80, 30);
+
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+</script>
+</body>
+</html>
