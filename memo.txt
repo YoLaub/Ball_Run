@@ -3,8 +3,13 @@ memoriser score
 memoriser nombre de gameOver
 Afficher la fin lors dela fin de la musique
 faire s'arreter le jeu lors de la fin de la musique
+Ajouter des bonus de score
 
 A FAIRE
-ajouter des bonus de score
+Creer une sesdion utilisateur
+Memoriser meilleur score de la session
+Ajouter un multiplicateur de score
+
 Optimiser la vitesse
+
 DESIGN!

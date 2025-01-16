@@ -3,7 +3,7 @@ import { initializeAudio, detectBeats, drawB, getCurrentFrequency } from "./audi
 var canva = document.getElementById("gameCanvas");
 const context = canva.getContext("2d");
 
-var modeTest = true;
+var modeTest = false;
 
 //Gestion du score
 var score = 0;
@@ -114,7 +114,7 @@ document.addEventListener("keyup", (e) => {
   }
 });
 
-const backgroundMusic = new Audio("musique/test.mp3");
+const backgroundMusic = new Audio("musique/test3.mp3");
 backgroundMusic.volume = 1; // Ajuste le volume
 
 backgroundMusic.addEventListener('ended', () => {
@@ -142,6 +142,9 @@ function drawBonus() {
     context.fillRect(bonus.x, bonus.y, bonus.width, bonus.height);
   } else if (bonus && bonusType === "slow") {
     context.fillStyle = "red";
+    context.fillRect(bonus.x, bonus.y, bonus.width, bonus.height);
+  }else if (bonus && bonusType === "addScoreBonus") {
+    context.fillStyle = "blue";
     context.fillRect(bonus.x, bonus.y, bonus.width, bonus.height);
   }
 }
@@ -176,7 +179,9 @@ function checkBonusCollision() {
       bonus = null; // Supprime le bonus
       if (bonusType === "invincible") {
         activateInvincibility();
-      } else {
+      } else if(bonusType ==="addScoreBonus") {
+        scoreDisplay += 10;
+      }else{
         activateSlow();
       }
     }
@@ -185,6 +190,7 @@ function checkBonusCollision() {
 
 function activateInvincibility() {
   isInvincible = true;
+  baseSpeed = 10;
   invincibilityTimer = 300; // 300 frames (environ 5 secondes si 60 FPS)
 
 }
@@ -194,6 +200,7 @@ function updateInvincibility() {
     invincibilityTimer--;
     if (invincibilityTimer <= 0) {
       isInvincible = false;
+      baseSpeed = 3;
       // Fin de l'invincibilité
     }
   }
@@ -433,13 +440,14 @@ function updateGame() {
 
   //Collision avec le sol
   if (isInvincible) {
-    ballY = groundY - 150; // Reste au sol
+    ballY = groundY - 150;
     velocityY = 0;
 
   } else {
     if (ballY > groundY - 10) {
       ballY = groundY - 10; // Reste au sol
       velocityY = 0; //Stop le mouvement
+
     }
   }
   //Ajuster la vitess en fonction du score
@@ -469,8 +477,13 @@ function updateGame() {
   if (score >= 25 && score % 25 === 0 && !bonus) {
     bonusType = "invincible";
     generateBonus();
-  } else if (score >= 30 && score % 20 === 0 && !bonus) {
+  } 
+  if (score >= 30 && score % 20 === 0 && !bonus) {
     bonusType = "slow";
+    generateBonus();
+  }
+  if (score >= 10 && score % 15 === 0 && !bonus) {
+    bonusType = "addScoreBonus";
     generateBonus();
   }
 
@@ -479,7 +492,7 @@ function updateGame() {
     context.fillStyle = "black";
     context.font = "40px Arial";
     context.textAlign = "center";
-    context.fillText("INVINCIBLE", canva.width / 2, 100);
+    context.fillText("SPEED ACTIVATE", canva.width / 2, 100);
     context.font = "20px Arial";
   }
   if (isSlow && !isGameOver) {
