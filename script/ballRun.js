@@ -100,7 +100,8 @@ async function temperature() {
     const weatherData = await getValueWeather();
     console.log(weatherData);
     temperatureData = weatherData.temperature;
-    return temperatureData;
+    nebulositeData = weatherData.nebulosity;
+    return temperatureData, nebulositeData;
   } catch (error) {
     console.error(
       "Erreur lors de la récupération des données météorologiques:",
@@ -447,11 +448,11 @@ var clouds = [];
 
 function generateClouds() {
   let quantityCloud = nebulositeData;
-
+  
   if (quantityCloud <= 0) {
     return;
   }
-  for (let i = 0; i < quantityCloud / 10; i++) {
+  for (let i = 0; i < quantityCloud; i++) {
     let cloud = {
       x: 0,
       y: 0,
@@ -464,7 +465,7 @@ function generateClouds() {
   }
 }
 
-generateClouds();
+
 
 function drawCloud() {
   for (let i = clouds.length - 1; i >= 0; i--) {
@@ -572,6 +573,8 @@ function updateGame() {
   context.fillStyle = gradient;
   context.fillRect(0, 0, canva.width, canva.height);
 
+  drawCloud();
+
   //drawScrollingBackground();
   drawB(context, canva);
   //drawBackground();
@@ -628,8 +631,7 @@ function updateGame() {
     drawObstacles();
   }
 
-  drawCloud();
-
+  
   checkObstaclesCollision();
   checkBonusCollision();
   updateInvincibility();
@@ -687,6 +689,9 @@ function updateGame() {
     context.font = "20px Arial";
   }
 
+  
+
+
   //Affichage du score
   context.font = "16px serif";
   context.fillText("Score: " + scoreDisplay, 600, 20);
@@ -743,7 +748,8 @@ document.addEventListener("keydown", (e) => {
     // Démarrer le jeu après interaction
     initializeAudio(backgroundMusic);
     updateGame();
-    fetchUsers();
+    generateClouds();
+    
   }
 });
 
