@@ -4,11 +4,13 @@ memoriser nombre de gameOver
 Afficher la fin lors dela fin de la musique
 faire s'arreter le jeu lors de la fin de la musique
 Ajouter des bonus de score
+API meteo
 
 A FAIRE
 Creer une sesdion utilisateur
 Memoriser meilleur score de la session
 Ajouter un multiplicateur de score
+ajouter nivau en fonction de certaine ville dans le monde ( PARIS - TOKYO - NEW-YORK - CENTRE-AFRIQUE)
 
 Optimiser la vitesse
 

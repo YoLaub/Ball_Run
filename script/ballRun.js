@@ -1,5 +1,10 @@
-import { initializeAudio, detectBeats, drawB, getCurrentFrequency } from "./audioManager.js";
-import {fetchUsers, getValueWeather} from "./meteoSource.js";
+import {
+  initializeAudio,
+  detectBeats,
+  drawB,
+  getCurrentFrequency,
+} from "./audioManager.js";
+import { fetchUsers, getValueWeather } from "./meteoSource.js";
 
 var canva = document.getElementById("gameCanvas");
 const context = canva.getContext("2d");
@@ -19,7 +24,6 @@ var isGameOver = false;
 var gameOver = 0;
 var animationId = null;
 
-
 // Variables pour gérer le message de fin
 let messageFinActive = false;
 let messageFinX = canva.width;
@@ -36,6 +40,7 @@ const minJumpPower = -2;
 const groundY = 300;
 var isOnBlock = false;
 
+/*
 //Arrière plan
 var backgrounds = [
   { x: canva.width, width: 50, height: 250 },
@@ -44,6 +49,7 @@ var backgrounds = [
   { x: canva.width + 300, width: 50, height: 370 },
   { x: canva.width + 350, width: 50, height: 250 },
 ];
+*/
 
 const bgImage1 = new Image();
 bgImage1.src = "images/bckg1.jpg";
@@ -70,22 +76,67 @@ var slowTimer = 0;
 
 //METEO
 
+var pressureData = null;
+var temperatureData = null;
+//var humidityData = null;
+var nebulositeData = null;
 
-async function weather() {
+async function pressure() {
   try {
     const weatherData = await getValueWeather();
     console.log(weatherData);
-    let weather = weatherData;
-    return weather
+    pressureData = weatherData.pressure;
+    return pressureData;
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des données météorologiques:",
+      error
+    );
+  }
+}
+pressure();
+async function temperature() {
+  try {
+    const weatherData = await getValueWeather();
+    console.log(weatherData);
+    temperatureData = weatherData.temperature;
+    return temperatureData;
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des données météorologiques:",
+      error
+    );
+  }
+}
+temperature();
+
+/*
+async function humidity() {
+  try {
+    const weatherData = await getValueWeather();
+    console.log(weatherData);
+    humidityData = weatherData.humidity;
+    return humidityData
   } catch (error) {
     console.error('Erreur lors de la récupération des données météorologiques:', error);
   }
 }
+  */
 
-weather();
-
-console.log(weather());
-
+async function nebulosity() {
+  try {
+    const weatherData = await getValueWeather();
+    console.log(weatherData);
+    nebulositeData = weatherData.nebulosity;
+    return nebulositeData;
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des données météorologiques:",
+      error
+    );
+  }
+}
+nebulosity();
 
 //Particule
 var particules = [];
@@ -130,6 +181,7 @@ document.addEventListener("keyup", (e) => {
       doubleJumpAvailable = true;
     } else if (doubleJumpAvailable) {
       velocityY = jumpPowerModulated;
+    } else if (ballY < groundY - 10) {
     }
   }
 });
@@ -137,15 +189,15 @@ document.addEventListener("keyup", (e) => {
 const backgroundMusic = new Audio("musique/test3.mp3");
 backgroundMusic.volume = 1; // Ajuste le volume
 
-backgroundMusic.addEventListener('ended', () => {
+backgroundMusic.addEventListener("ended", () => {
   messageFinActive = true;
-  drawEndMessage()
-  console.log("ended")
-})
+  drawEndMessage();
+  console.log("ended");
+});
 
 //Generer les bonus
 function generateBonus() {
-  if(!messageFinActive){
+  if (!messageFinActive) {
     bonus = {
       x: canva.width,
       y: Math.random() * (groundY - 50), // Position aléatoire au-dessus du sol
@@ -153,7 +205,6 @@ function generateBonus() {
       height: 20,
     };
   }
-  
 }
 
 function drawBonus() {
@@ -163,7 +214,7 @@ function drawBonus() {
   } else if (bonus && bonusType === "slow") {
     context.fillStyle = "red";
     context.fillRect(bonus.x, bonus.y, bonus.width, bonus.height);
-  }else if (bonus && bonusType === "addScoreBonus") {
+  } else if (bonus && bonusType === "addScoreBonus") {
     context.fillStyle = "blue";
     context.fillRect(bonus.x, bonus.y, bonus.width, bonus.height);
   }
@@ -199,9 +250,9 @@ function checkBonusCollision() {
       bonus = null; // Supprime le bonus
       if (bonusType === "invincible") {
         activateInvincibility();
-      } else if(bonusType ==="addScoreBonus") {
+      } else if (bonusType === "addScoreBonus") {
         scoreDisplay += 10;
-      }else{
+      } else {
         activateSlow();
       }
     }
@@ -212,7 +263,6 @@ function activateInvincibility() {
   isInvincible = true;
   baseSpeed = 10;
   invincibilityTimer = 300; // 300 frames (environ 5 secondes si 60 FPS)
-
 }
 
 function updateInvincibility() {
@@ -239,17 +289,19 @@ function updateSlow() {
   }
 }
 
-
 //Generer les particules
 function generateParticules() {
-  const particule = { x: Math.random() * 800, y: Math.random() * (groundY), width: 2, height: 1 };
-  particules.push(particule)
-
+  const particule = {
+    x: Math.random() * 800,
+    y: Math.random() * groundY,
+    width: 2,
+    height: 1,
+  };
+  particules.push(particule);
 }
 
 function drawParticule() {
   particules.forEach((particule) => {
-
     let i = particule;
     if (!isSlow) {
       particule.x -= speed * 0.3;
@@ -258,7 +310,6 @@ function drawParticule() {
       particule.x -= baseSpeed * 0.3;
       particule.y += 1;
     }
-
 
     context.fillStyle = "#f0f0f2";
     context.fillRect(
@@ -275,21 +326,18 @@ function drawParticule() {
   });
 }
 
-
-
 //generer les obstacles
 function generateObstacle() {
   let obstacle = {
     x: canva.width,
     width: 20 + Math.floor(Math.random() * 10),
-    height: (getCurrentFrequency() / 4) - (Math.floor(Math.random() * 10)),
+    height: getCurrentFrequency() / 4 - Math.floor(Math.random() * 10),
   };
   obstacles.push(obstacle); // Ajoute le nouvel obstacle au tableau
 }
 
 function drawObstacles() {
   for (let i = obstacles.length - 5; i >= 0; i--) {
-
     let obstacle = obstacles[i];
 
     // Déplace l'obstacle
@@ -394,48 +442,104 @@ function drawBackground() {
 }
 */
 
- //DESSIN NUAGE
- function generateClouds(){
-  let quantityCloud = Math.floor(weather().nebulosity)
-  for (let i = 0 ; i < quantityCloud/10 ; i++){
-    let x = Math.random()*600;
-    let y = (Math.random())*150;
-    let size = (Math.random())*quantityCloud
-    drawCloud(x, y, size)
+//DESSIN NUAGE
+var clouds = [];
+
+function generateClouds() {
+  let quantityCloud = nebulositeData;
+
+  if (quantityCloud <= 0) {
+    return;
+  }
+  for (let i = 0; i < quantityCloud / 10; i++) {
+    let cloud = {
+      x: 0,
+      y: 0,
+      size: 0,
+    };
+    cloud.x = Math.floor(Math.random() * 600);
+    cloud.y = Math.floor(Math.random() * 150);
+    cloud.size = Math.floor(Math.random() * (quantityCloud * 10));
+    clouds.push(cloud);
   }
 }
 
-function drawCloud(x, y, size) {
-  context.fillStyle = '#FFFFFF'; // Couleur blanche pour le nuage
-  context.beginPath();
+generateClouds();
 
-  // Dessiner les cercles du nuage
-  context.arc(x, y, size, 0, Math.PI * 2); // Cercle principal
-  context.arc(x + size * 0.7, y - size * 0.4, size * 0.8, 0, Math.PI * 2);
-  context.arc(x - size * 0.7, y - size * 0.4, size * 0.8, 0, Math.PI * 2);
-  context.arc(x + size * 0.4, y + size * 0.4, size * 0.7, 0, Math.PI * 2);
-  context.arc(x - size * 0.4, y + size * 0.4, size * 0.7, 0, Math.PI * 2);
+function drawCloud() {
+  for (let i = clouds.length - 1; i >= 0; i--) {
+    let cloud = clouds[i];
+    console.log(clouds[i]);
 
-  context.closePath();
-  context.fill();
+    // Déplace l'obstacle
+    if (!isSlow) {
+      cloud.x -= 0.2;
+    } else {
+      cloud.x -= 0;
+    }
+
+    // Dessine l'obstacle
+    context.fillStyle = "black"; // Couleur blanche pour le nuage
+    context.beginPath();
+
+    // Dessiner les cercles du nuage
+    context.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2); // Cercle principal
+    context.arc(
+      cloud.x + cloud.size * 0.7,
+      cloud.y - cloud.size * 0.4,
+      cloud.size * 0.8,
+      0,
+      Math.PI * 2
+    );
+    context.arc(
+      cloud.x - cloud.size * 0.7,
+      cloud.y - cloud.size * 0.4,
+      cloud.size * 0.8,
+      0,
+      Math.PI * 2
+    );
+    context.arc(
+      cloud.x + cloud.size * 0.4,
+      cloud.y + cloud.size * 0.4,
+      cloud.size * 0.7,
+      0,
+      Math.PI * 2
+    );
+    context.arc(
+      cloud.x - cloud.size * 0.4,
+      cloud.y + cloud.size * 0.4,
+      cloud.size * 0.7,
+      0,
+      Math.PI * 2
+    );
+
+    context.closePath();
+    context.fill();
+
+    // Supprime l'obstacle s'il sort de l'écran
+    if (cloud.x < 0) {
+      cloud.x = canva.width;
+    }
+  }
 }
 
 // Fonction pour dessiner le message "Fin"
 function drawEndMessage() {
-
   context.font = "48px Arial";
   context.fillStyle = "black";
   context.fillText(messageFinText, messageFinX, canva.height / 2);
   messageFinX -= messageFinSpeed;
-  
+
   // Vérifier si le message est complètement sorti de l'écran
-  if (messageFinX + context.measureText(messageFinText).width < canva.width / 2) {
+  if (
+    messageFinX + context.measureText(messageFinText).width <
+    canva.width / 2
+  ) {
     stopGame(); // Arrêter le jeu
   }
-
 }
 
-
+//-------------MIS A JOUR FRME----------------
 
 function updateGame() {
   if (isGameOver) {
@@ -455,24 +559,32 @@ function updateGame() {
 
   context.clearRect(0, 0, canva.width, canva.height);
 
+  //COULEUR DE FOND
 
+  //gradient linéaire
+  const gradient = context.createLinearGradient(0, 0, 0, canva.height);
+
+  // Ajouter les couleurs du gradient
+  gradient.addColorStop(0, "#ff7e5f"); // Couleur orange vif
+  gradient.addColorStop(1, "#feb47b"); // Couleur pêche
+
+  // Remplir le canvas avec le gradient
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, canva.width, canva.height);
 
   //drawScrollingBackground();
   drawB(context, canva);
   //drawBackground();
   drawBonus();
-  if(weather().pressure <= 1010){
+  if (pressureData <= 1010) {
     generateParticules();
     drawParticule();
   }
-  generateClouds()
-  
-  
+
   updateBonus();
 
   start = true;
 
- 
   //Dessine la boule
   context.fillStyle = "black";
   context.beginPath();
@@ -494,12 +606,10 @@ function updateGame() {
   if (isInvincible) {
     ballY = groundY - 150;
     velocityY = 0;
-
   } else {
     if (ballY > groundY - 10) {
       ballY = groundY - 10; // Reste au sol
       velocityY = 0; //Stop le mouvement
-
     }
   }
   //Ajuster la vitess en fonction du score
@@ -518,7 +628,7 @@ function updateGame() {
     drawObstacles();
   }
 
-
+  drawCloud();
 
   checkObstaclesCollision();
   checkBonusCollision();
@@ -529,7 +639,7 @@ function updateGame() {
   if (score >= 25 && score % 25 === 0 && !bonus) {
     bonusType = "invincible";
     generateBonus();
-  } 
+  }
   if (score >= 30 && score % 20 === 0 && !bonus) {
     bonusType = "slow";
     generateBonus();
@@ -582,37 +692,37 @@ function updateGame() {
   context.fillText("Score: " + scoreDisplay, 600, 20);
   //Temperature
   context.font = "16px serif";
-  context.fillText("Temperature: " + weather().temperature, 600, 30);
-
+  context.fillText("Temperature: " + Math.floor(temperatureData) + "°C", 600, 40);
 
   animationId = requestAnimationFrame(updateGame);
 
-  if(messageFinActive){
+  if (messageFinActive) {
     drawEndMessage();
   }
 
-
   // Toujours vérifier et dessiner le message de fin si nécessaire
-
-
 }
 
 function stopGame() {
-  cancelAnimationFrame(animationId)
+  cancelAnimationFrame(animationId);
 
   context.clearRect(0, 0, canva.width, canva.height);
 
   context.fillStyle = "black";
   context.font = "40px Arial";
   context.textAlign = "center";
-  context.fillText("Your best Score: " + (Math.max(...scoreTab)), canva.width / 2, canva.height / 2);
+  context.fillText(
+    "Your best Score: " + Math.max(...scoreTab),
+    canva.width / 2,
+    canva.height / 2
+  );
   context.font = "20px Arial";
   context.fillText(
-    "You failed " + (gameOver) + " times",
+    "You failed " + gameOver + " times",
     canva.width / 2,
     canva.height / 2 + 40
-  )
-  console.log(scoreTab)
+  );
+  console.log(scoreTab);
 }
 
 function restartGame() {
@@ -633,7 +743,7 @@ document.addEventListener("keydown", (e) => {
     // Démarrer le jeu après interaction
     initializeAudio(backgroundMusic);
     updateGame();
-    fetchUsers()
+    fetchUsers();
   }
 });
 
