@@ -4,7 +4,8 @@ import {
   drawB,
   getCurrentFrequency,
 } from "./audioManager.js";
-import { fetchUsers, getValueWeather } from "./meteoSource.js";
+import {getValueWeather } from "./meteoSource.js";
+import {drawSnowflake} from "./assets.js";
 
 var canva = document.getElementById("gameCanvas");
 const context = canva.getContext("2d");
@@ -443,11 +444,35 @@ function drawBackground() {
 }
 */
 
+// //DESSIN DES FLOCONS DE NEIGE
+// var clouds = [];
+
+// function generateSnowflake() {
+//   let quantityCloud = Math.floor(nebulositeData);
+  
+//   if (quantityCloud <= 0) {
+//     return;
+//   }
+//   for (let i = 0; i < quantityCloud; i++) {
+//     let cloud = {
+//       x: 0,
+//       y: 0,
+//       size: 0,
+//     };
+//     cloud.x = Math.floor(Math.random() * 600);
+//     cloud.y = Math.floor(Math.random() * 150);
+//     cloud.size = Math.floor(Math.random() * (quantityCloud * 10));
+//     clouds.push(cloud);
+//   }
+// }
+
+
+
 //DESSIN NUAGE
 var clouds = [];
 
 function generateClouds() {
-  let quantityCloud = nebulositeData;
+  let quantityCloud = Math.floor(nebulositeData);
   
   if (quantityCloud <= 0) {
     return;
@@ -472,14 +497,12 @@ function drawCloud() {
     let cloud = clouds[i];
     console.log(clouds[i]);
 
-    // Déplace l'obstacle
     if (!isSlow) {
       cloud.x -= 0.2;
     } else {
       cloud.x -= 0;
     }
 
-    // Dessine l'obstacle
     context.fillStyle = "black"; // Couleur blanche pour le nuage
     context.beginPath();
 
@@ -540,7 +563,7 @@ function drawEndMessage() {
   }
 }
 
-//-------------MIS A JOUR FRME----------------
+//-------------MIS A JOUR FRAME----------------
 
 function updateGame() {
   if (isGameOver) {
@@ -704,8 +727,6 @@ function updateGame() {
   if (messageFinActive) {
     drawEndMessage();
   }
-
-  // Toujours vérifier et dessiner le message de fin si nécessaire
 }
 
 function stopGame() {

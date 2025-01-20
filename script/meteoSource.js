@@ -43,8 +43,9 @@ function getCurrentDate() {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0'); // Les mois sont indexés à partir de 0
   const day = String(now.getDate()).padStart(2, '0');
+  const hour = now.getHours();
 
-  return `${year}-${month}-${day}`;
+  return `${year}-${month}-${day} ${hour}`;
 }
 
 export async function getValueWeather() {
@@ -54,11 +55,11 @@ export async function getValueWeather() {
       await fetchUsers();
       const dataResponse = weatherDataCache;
 
-      let test = `${getCurrentDate()} 10:00:00`; // Formater la date du jour
+      let test = `${getCurrentDate()}:00:00`; // Formater la date du jour
 
       const valueWeather = {
         pressure: (dataResponse[test]["pression"]["niveau_de_la_mer"]) / 100,
-        temperature: 274.4 - (dataResponse[test]["temperature"]["2m"]),
+        temperature:(dataResponse[test]["temperature"]["2m"] - 273.15),
         humidity: dataResponse[test]["humidite"]["2m"],
         nebulosity: (dataResponse[test]["nebulosite"]["totale"])
       };

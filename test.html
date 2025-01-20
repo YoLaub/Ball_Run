@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,43 +9,63 @@
         canvas {
             display: block;
             margin: auto;
-            background-color: #87CEEB; /* Couleur de ciel */
+            background-color: #87CEEB;
+            /* Couleur de ciel */
         }
     </style>
 </head>
+
 <body>
-<canvas id="gameCanvas" width="800" height="400"></canvas>
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+    <h1><a href="index.html">retour</a></h1>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-    function drawCloud(x, y, size) {
-        ctx.fillStyle = '#FFFFFF'; // Couleur blanche pour le nuage
-        ctx.beginPath();
+        function drawSnowflake(x, y, size) {
+            ctx.strokeStyle = '#FFFFFF'; // Blanc pour le flocon
+            ctx.lineWidth = 1;
 
-        // Dessiner les cercles du nuage
-        ctx.arc(x, y, size, 0, Math.PI * 2); // Cercle principal
-        ctx.arc(x + size * 0.7, y - size * 0.4, size * 0.8, 0, Math.PI * 2);
-        ctx.arc(x - size * 0.7, y - size * 0.4, size * 0.8, 0, Math.PI * 2);
-        ctx.arc(x + size * 0.4, y + size * 0.4, size * 0.7, 0, Math.PI * 2);
-        ctx.arc(x - size * 0.4, y + size * 0.4, size * 0.7, 0, Math.PI * 2);
+            // Fonction récursive pour dessiner les branches
+            function drawBranch(x1, y1, length, angle, depth) {
+                if (depth === 0) return;
 
-        ctx.closePath();
-        ctx.fill();
-    }
+                // Calculer le point final de la branche
+                const x2 = x1 + length * Math.cos(angle);
+                const y2 = y1 + length * Math.sin(angle);
 
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Dessiner la branche principale
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
 
-        // Exemple de position fixe pour les nuages
-        drawCloud(200, 100, 40);
-        drawCloud(400, 150, 50);
-        drawCloud(600, 80, 30);
+                // Dessiner les sous-branches
+                const newLength = length * 0.6; // Réduction de la taille
+                drawBranch(x2, y2, newLength, angle - Math.PI / 6, depth - 1); // Branche gauche
+                drawBranch(x2, y2, newLength, angle + Math.PI / 6, depth - 1); // Branche droite
+            }
 
-        requestAnimationFrame(animate);
-    }
+            // Dessiner les six branches principales du flocon
+            for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i;
+                drawBranch(x, y, size, angle, 3); // Profondeur 3
+            }
+        }
 
-    animate();
-</script>
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dessiner quelques flocons de neige fixes
+            drawSnowflake(200, 150, 10);
+            drawSnowflake(400, 200, 15);
+            drawSnowflake(600, 100, 5);
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
 </body>
+
 </html>
