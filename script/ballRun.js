@@ -5,7 +5,7 @@ import {
   getCurrentFrequency,
 } from "./audioManager.js";
 import {getValueWeather } from "./meteoSource.js";
-import {drawSnowflake} from "./assets.js";
+// import {drawSnowflake} from "./assets.js";
 
 var canva = document.getElementById("gameCanvas");
 const context = canva.getContext("2d");
@@ -408,6 +408,36 @@ function checkObstaclesCollision() {
   }
 }
 
+// Charger l'image de l'arrière-plan
+const bgImage = new Image();
+bgImage.src = "images/bg1.png"; // Remplace par le chemin de ton image
+
+let bgX1 = 0; // Position de la première image
+let bgX2 = canva.width; // Position de la deuxième image
+
+function drawScrollingBackground() {
+  // Dessiner les deux images côte à côte
+  context.drawImage(bgImage, bgX1, -100, canva.width, canva.height);
+  context.drawImage(bgImage, bgX2, -100, canva.width, canva.height);
+
+  // Déplacer les images vers la gauche
+  if (isSlow) {
+    bgX1 -= 0; // Vitesse réduite si slow
+    bgX2 -= 0;
+  } else {
+    bgX1 -= 0.1; // Vitesse légèrement plus lente pour simuler la distance
+    bgX2 -= 0.1;
+  }
+
+  // Réinitialiser la position pour créer un défilement infini
+  if (bgX1 + canva.width <= 0) {
+    bgX1 = bgX2 + canva.width;
+  }
+  if (bgX2 + canva.width <= 0) {
+    bgX2 = bgX1 + canva.width;
+  }
+}
+
 /*
 function drawBackground() {
   backgrounds.forEach((background) => {
@@ -495,15 +525,16 @@ function generateClouds() {
 function drawCloud() {
   for (let i = clouds.length - 1; i >= 0; i--) {
     let cloud = clouds[i];
-    console.log(clouds[i]);
+   
 
     if (!isSlow) {
       cloud.x -= 0.2;
     } else {
       cloud.x -= 0;
     }
+    console.log(clouds);
 
-    context.fillStyle = "black"; // Couleur blanche pour le nuage
+    context.fillStyle = "rgba(128, 128, 128, 0.3)"; // Couleur blanche pour le nuage
     context.beginPath();
 
     // Dessiner les cercles du nuage
@@ -598,7 +629,7 @@ function updateGame() {
 
   drawCloud();
 
-  //drawScrollingBackground();
+  drawScrollingBackground();
   drawB(context, canva);
   //drawBackground();
   drawBonus();

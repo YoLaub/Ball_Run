@@ -1,6 +1,6 @@
 
 //FLOCON DE NEIGE
-function drawSnowflake(x, y, size) {
+export function drawSnowflake(x, y, size) {
     ctx.strokeStyle = '#FFFFFF'; // Blanc pour le flocon
     ctx.lineWidth = 2;
 

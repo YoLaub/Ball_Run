@@ -19,6 +19,7 @@ export async function fetchUsers() {
   try {
     // Effectuer la requête GET
     const response = await fetch(URL);
+    
 
     // Vérifier si la réponse est OK (statut HTTP 200-299)
     if (!response.ok) {
@@ -28,6 +29,7 @@ export async function fetchUsers() {
     // Parser la réponse en JSON
     const data = await response.json();
     weatherDataCache = data;
+    console.log(weatherDataCache)
 
     return data;
     
@@ -43,9 +45,9 @@ function getCurrentDate() {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0'); // Les mois sont indexés à partir de 0
   const day = String(now.getDate()).padStart(2, '0');
-  const hour = now.getHours();
+  
 
-  return `${year}-${month}-${day} ${hour}`;
+  return `${year}-${month}-${day}`;
 }
 
 export async function getValueWeather() {
@@ -55,13 +57,14 @@ export async function getValueWeather() {
       await fetchUsers();
       const dataResponse = weatherDataCache;
 
-      let test = `${getCurrentDate()}:00:00`; // Formater la date du jour
+      let test = `${getCurrentDate()} 16:00:00`; // Formater la date du jour
+      console.log(test)
 
       const valueWeather = {
         pressure: (dataResponse[test]["pression"]["niveau_de_la_mer"]) / 100,
         temperature:(dataResponse[test]["temperature"]["2m"] - 273.15),
         humidity: dataResponse[test]["humidite"]["2m"],
-        nebulosity: (dataResponse[test]["nebulosite"]["totale"])
+        nebulosity: (dataResponse[test]["nebulosite"]["totale"])/10
       };
 
       return valueWeather;
