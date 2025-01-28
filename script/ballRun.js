@@ -4,8 +4,7 @@ import {
   drawB,
   getCurrentFrequency,
 } from "./audioManager.js";
-import {getValueWeather } from "./meteoSource.js";
-// import {drawSnowflake} from "./assets.js";
+import { getValueWeather } from "./meteoSource.js";
 
 var canva = document.getElementById("gameCanvas");
 const context = canva.getContext("2d");
@@ -54,6 +53,54 @@ var backgrounds = [
 
 //var bgX1 = 0;
 //var bgX2 = canva.width;
+// Charger l'image de l'arrière-plan
+const bgParis = new Image();
+bgParis.src = "images/paris.png"; // Remplace par le chemin de ton image
+const bgMoscou = new Image();
+bgMoscou.src = "images/moscou.png"; // Remplace par le chemin de ton image
+const bgTokyo = new Image();
+bgTokyo.src = "images/tokyo.png"; // Remplace par le chemin de ton image
+const bgJohannesburg = new Image();
+bgJohannesburg.src = "images/johannesburg.png"; // Remplace par le chemin de ton image
+const bgBresil = new Image();
+bgBresil.src = "images/rio.png"; // Remplace par le chemin de ton image
+const bgNewYork = new Image();
+bgNewYork.src = "images/newyork.png"; // Remplace par le chemin de ton image
+
+
+
+var backgroundsCity = [
+  { src: bgParis, x: 0, y: -100, width: canva.width, height: canva.height },
+  { src: bgMoscou, x: 0, y: -100, width: canva.width, height: canva.height },
+  { src: bgTokyo, x: 0, y: -100, width: canva.width, height: canva.height },
+  { src: bgJohannesburg, x: 0, y: -100, width: canva.width, height: canva.height },
+  { src: bgBresil, x: 0, y: -100, width: canva.width, height: canva.height },
+  {src: bgNewYork, x: 0, y: -100, width: canva.width, height: canva.height }
+];
+
+var backgroundIndex = 0;
+
+
+function drawAndUpdateBackground(){
+  
+  context.drawImage(backgroundsCity[backgroundIndex].src,backgroundsCity[backgroundIndex].x,backgroundsCity[backgroundIndex].y,backgroundsCity[backgroundIndex].width,backgroundsCity[backgroundIndex].height);
+
+
+  if ((backgroundsCity[backgroundIndex].x + 400) > 0) {
+    console.log(backgroundsCity[backgroundIndex].x)
+    console.log(backgroundsCity[backgroundIndex])
+    if (isSlow) {
+      backgroundsCity[backgroundIndex].x -= 0.1; // Vitesse réduite si slow
+    } else {
+      backgroundsCity[backgroundIndex].x -= 0.2; // Vitesse légèrement plus lente pour simuler la distance
+    }
+  } else {
+    backgroundIndex ++ ;
+    context.drawImage(backgroundsCity[backgroundIndex].src,backgroundsCity[backgroundIndex].x,backgroundsCity[backgroundIndex].y,backgroundsCity[backgroundIndex].width,backgroundsCity[backgroundIndex].height);
+  }
+}
+
+
 
 //Obstacles
 var obstacles = [];
@@ -403,35 +450,35 @@ function checkObstaclesCollision() {
   }
 }
 
-// Charger l'image de l'arrière-plan
-const bgImage = new Image();
-bgImage.src = "images/bg1.png"; // Remplace par le chemin de ton image
+// // Charger l'image de l'arrière-plan
+// const bgImage = new Image();
+// bgImage.src = "images/paris.png"; // Remplace par le chemin de ton image
 
-let bgX1 = 0; // Position de la première image
-let bgX2 = canva.width; // Position de la deuxième image
+// let bgX1 = 0; // Position de la première image
+// let bgX2 = canva.width; // Position de la deuxième image
 
-function drawScrollingBackground() {
-  // Dessiner les deux images côte à côte
-  context.drawImage(bgImage, bgX1, -100, canva.width, canva.height);
-  context.drawImage(bgImage, bgX2, -100, canva.width, canva.height);
+// function drawScrollingBackground() {
+//   // Dessiner les deux images côte à côte
+//   context.drawImage(bgImage, bgX1, -100, canva.width, canva.height);
+//   context.drawImage(bgImage, bgX2, -100, canva.width, canva.height);
 
-  // Déplacer les images vers la gauche
-  if (isSlow) {
-    bgX1 -= 0; // Vitesse réduite si slow
-    bgX2 -= 0;
-  } else {
-    bgX1 -= 0.1; // Vitesse légèrement plus lente pour simuler la distance
-    bgX2 -= 0.1;
-  }
+//   // Déplacer les images vers la gauche
+//   if (isSlow) {
+//     bgX1 -= 0; // Vitesse réduite si slow
+//     bgX2 -= 0;
+//   } else {
+//     bgX1 -= 0.1; // Vitesse légèrement plus lente pour simuler la distance
+//     bgX2 -= 0.1;
+//   }
 
-  // Réinitialiser la position pour créer un défilement infini
-  if (bgX1 + canva.width <= 0) {
-    bgX1 = bgX2 + canva.width;
-  }
-  if (bgX2 + canva.width <= 0) {
-    bgX2 = bgX1 + canva.width;
-  }
-}
+//   // Réinitialiser la position pour créer un défilement infini
+//   if (bgX1 + canva.width <= 0) {
+//     bgX1 = bgX2 + canva.width;
+//   }
+//   if (bgX2 + canva.width <= 0) {
+//     bgX2 = bgX1 + canva.width;
+//   }
+// }
 
 /*
 function drawBackground() {
@@ -475,7 +522,7 @@ var clouds = [];
 
 function generateClouds() {
   let quantityCloud = Math.floor(nebulositeData);
-  
+
   if (quantityCloud <= 0) {
     return;
   }
@@ -497,14 +544,13 @@ function generateClouds() {
 function drawCloud() {
   for (let i = clouds.length - 1; i >= 0; i--) {
     let cloud = clouds[i];
-   
+
 
     if (!isSlow) {
       cloud.x -= 0.2;
     } else {
       cloud.x -= 0;
     }
-    console.log(clouds);
 
     context.fillStyle = "rgba(128, 128, 128, 0.3)"; // Couleur blanche pour le nuage
     context.beginPath();
@@ -601,7 +647,7 @@ function updateGame() {
 
   drawCloud();
 
-  drawScrollingBackground();
+  drawAndUpdateBackground()
   drawB(context, canva);
   //drawBackground();
   drawBonus();
@@ -657,7 +703,7 @@ function updateGame() {
     drawObstacles();
   }
 
-  
+
   checkObstaclesCollision();
   checkBonusCollision();
   updateInvincibility();
@@ -715,7 +761,7 @@ function updateGame() {
     context.font = "20px Arial";
   }
 
-  
+
 
 
   //Affichage du score
@@ -773,7 +819,7 @@ document.addEventListener("keydown", (e) => {
     initializeAudio(backgroundMusic);
     updateGame();
     generateClouds();
-    
+
   }
 });
 

@@ -7,6 +7,8 @@ Ajouter des bonus de score
 API meteo
 
 A FAIRE
+amélirer le defilement du fond
+mis à jour du temps au changement d'image
 Creer une session utilisateur
 Memoriser meilleur score de la session
 Ajouter un multiplicateur de score
