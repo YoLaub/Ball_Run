@@ -7,7 +7,7 @@ Ajouter des bonus de score
 API meteo
 
 A FAIRE
-Creer une sesdion utilisateur
+Creer une session utilisateur
 Memoriser meilleur score de la session
 Ajouter un multiplicateur de score
 ajouter nivau en fonction de certaine ville dans le monde ( PARIS - TOKYO - NEW-YORK - CENTRE-AFRIQUE)

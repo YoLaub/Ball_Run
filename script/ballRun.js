@@ -52,11 +52,6 @@ var backgrounds = [
 ];
 */
 
-const bgImage1 = new Image();
-bgImage1.src = "images/bckg1.jpg";
-const bgImage2 = new Image();
-bgImage2.src = "images/bckg2.jpg";
-
 //var bgX1 = 0;
 //var bgX2 = canva.width;
 
@@ -473,29 +468,6 @@ function drawBackground() {
   });
 }
 */
-
-// //DESSIN DES FLOCONS DE NEIGE
-// var clouds = [];
-
-// function generateSnowflake() {
-//   let quantityCloud = Math.floor(nebulositeData);
-  
-//   if (quantityCloud <= 0) {
-//     return;
-//   }
-//   for (let i = 0; i < quantityCloud; i++) {
-//     let cloud = {
-//       x: 0,
-//       y: 0,
-//       size: 0,
-//     };
-//     cloud.x = Math.floor(Math.random() * 600);
-//     cloud.y = Math.floor(Math.random() * 150);
-//     cloud.size = Math.floor(Math.random() * (quantityCloud * 10));
-//     clouds.push(cloud);
-//   }
-// }
-
 
 
 //DESSIN NUAGE

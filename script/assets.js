@@ -30,3 +30,12 @@ export function drawSnowflake(x, y, size) {
         drawBranch(x, y, size, angle, 3); // Profondeur 3
     }
 }
+
+export function drawSun(){
+
+    context.fillStyle = "black";
+    context.beginPath();
+    context.arc(100, ballY, 10, 0, Math.PI * 2);
+    context.fill();
+
+}
