@@ -35,11 +35,7 @@ export function detectBeats(callback) {
     if (!analyser) 
         { 
             return;
-
         }
-
-        
-
     analyser.getByteFrequencyData(dataArray);
     
 
@@ -58,7 +54,6 @@ export function detectBeats(callback) {
     // Appeler le callback si un beat est détecté
     if (beatDetected) {
         callback();
-        console.log('Données audio :', dataArray)
     }
 
    }

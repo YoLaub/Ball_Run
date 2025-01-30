@@ -7,65 +7,47 @@
     <title>Dessiner un Nuage</title>
     <style>
         canvas {
-            display: block;
-            margin: auto;
-            background-color: #87CEEB;
-            /* Couleur de ciel */
+          border: 1px solid black;
         }
-    </style>
-</head>
-
-<body>
-    <h1><a href="index.html">retour</a></h1>
-    <canvas id="gameCanvas" width="800" height="400"></canvas>
-    <script>
-        const canvas = document.getElementById('gameCanvas');
+      </style>
+    </head>
+    <body>
+        <a href="index.html">RETOUR</a>
+      <canvas id="myCanvas" width="800" height="600"></canvas>
+      <script>
+        const canvas = document.getElementById('myCanvas');
         const ctx = canvas.getContext('2d');
-
-        function drawSnowflake(x, y, size) {
-            ctx.strokeStyle = '#FFFFFF'; // Blanc pour le flocon
-            ctx.lineWidth = 1;
-
-            // Fonction récursive pour dessiner les branches
-            function drawBranch(x1, y1, length, angle, depth) {
-                if (depth === 0) return;
-
-                // Calculer le point final de la branche
-                const x2 = x1 + length * Math.cos(angle);
-                const y2 = y1 + length * Math.sin(angle);
-
-                // Dessiner la branche principale
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
-
-                // Dessiner les sous-branches
-                const newLength = length * 0.6; // Réduction de la taille
-                drawBranch(x2, y2, newLength, angle - Math.PI / 6, depth - 1); // Branche gauche
-                drawBranch(x2, y2, newLength, angle + Math.PI / 6, depth - 1); // Branche droite
-            }
-
-            // Dessiner les six branches principales du flocon
-            for (let i = 0; i < 6; i++) {
-                const angle = (Math.PI / 3) * i;
-                drawBranch(x, y, size, angle, 3); // Profondeur 3
-            }
+    
+        let angle = 0;
+        const rotationCenterX = 400;
+        const rotationCenterY = 300; // Centré verticalement
+        const circleRadius = 10;
+        const circleDistance = 200; // Distance entre le centre de rotation et le cercle
+        const blurLayers = 5; // Nombre de couches de flou
+        const blurIntensity = 10; // Intensité du flou
+    
+        function drawSun() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+          // Calculer la position du cercle en fonction de l'angle de rotation
+          const circleX = rotationCenterX + circleDistance * Math.cos(angle);
+          const circleY = rotationCenterY + circleDistance * Math.sin(angle);
+    
+     // Dessiner le cercle avec effet de flou
+     for (let i = 0; i < blurLayers; i++) {
+        ctx.beginPath();
+        ctx.arc(circleX, circleY, circleRadius + i * blurIntensity, 0, 2 * Math.PI);
+        ctx.fillStyle = `rgba(255, 165, 0, ${(1 - i / blurLayers) * 0.5})`;
+        ctx.fill();
+        ctx.closePath();
+      }
+          // Incrémenter l'angle pour la rotation
+          angle += 0.005;
+    
+          requestAnimationFrame(drawSun);
         }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Dessiner quelques flocons de neige fixes
-            drawSnowflake(200, 150, 10);
-            drawSnowflake(400, 200, 15);
-            drawSnowflake(600, 100, 5);
-
-            requestAnimationFrame(animate);
-        }
-
-        animate();
-    </script>
-</body>
-
-</html>
+    
+        drawSun();
+      </script>
+    </body>
+    </html>

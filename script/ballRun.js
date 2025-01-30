@@ -6,6 +6,10 @@ import {
 } from "./audioManager.js";
 import { getValueWeather } from "./meteoSource.js";
 
+//=======================VARIABLES GENERALE======================
+// =======================////////////////======================
+// =======================////////////////======================
+
 var canva = document.getElementById("gameCanvas");
 const context = canva.getContext("2d");
 
@@ -40,20 +44,25 @@ const minJumpPower = -2;
 const groundY = 300;
 var isOnBlock = false;
 
-/*
-//Arrière plan
-var backgrounds = [
-  { x: canva.width, width: 50, height: 250 },
-  { x: canva.width + 50, width: 50, height: 200 },
-  { x: canva.width + 70, width: 50, height: 350 },
-  { x: canva.width + 300, width: 50, height: 370 },
-  { x: canva.width + 350, width: 50, height: 250 },
-];
-*/
+//Obstacles
+var obstacles = [];
+//Vitesse
+var baseSpeed = 2;
+var speed = baseSpeed;
 
-//var bgX1 = 0;
-//var bgX2 = canva.width;
-// Charger l'image de l'arrière-plan
+//Bonus
+var bonus = null;
+var bonusType = "";
+var isInvincible = false;
+var invincibilityTimer = 0;
+
+var isSlow = false;
+var slowTimer = 0;
+
+//=======================BACKGROUND======================
+//=======================/////////======================
+//=======================/////////======================
+
 const bgParis = new Image();
 bgParis.src = "images/paris.png"; // Remplace par le chemin de ton image
 const bgMoscou = new Image();
@@ -75,49 +84,40 @@ var backgroundsCity = [
   { src: bgTokyo, x: 0, y: -100, width: canva.width, height: canva.height },
   { src: bgJohannesburg, x: 0, y: -100, width: canva.width, height: canva.height },
   { src: bgBresil, x: 0, y: -100, width: canva.width, height: canva.height },
-  {src: bgNewYork, x: 0, y: -100, width: canva.width, height: canva.height }
+  { src: bgNewYork, x: 0, y: -100, width: canva.width, height: canva.height }
 ];
 
 var backgroundIndex = 0;
+var round = 0;
 
+function drawAndUpdateBackground() {
+  context.drawImage(backgroundsCity[backgroundIndex].src, backgroundsCity[backgroundIndex].x + canva.width, backgroundsCity[backgroundIndex].y, backgroundsCity[backgroundIndex].width, backgroundsCity[backgroundIndex].height);
 
-function drawAndUpdateBackground(){
-  
-  context.drawImage(backgroundsCity[backgroundIndex].src,backgroundsCity[backgroundIndex].x,backgroundsCity[backgroundIndex].y,backgroundsCity[backgroundIndex].width,backgroundsCity[backgroundIndex].height);
-
-
-  if ((backgroundsCity[backgroundIndex].x + 400) > 0) {
-    console.log(backgroundsCity[backgroundIndex].x)
+  if ((backgroundsCity[backgroundIndex].x + canva.width) > -800) {
+    console.log(backgroundsCity[backgroundIndex].x + canva.width)
     console.log(backgroundsCity[backgroundIndex])
     if (isSlow) {
       backgroundsCity[backgroundIndex].x -= 0.1; // Vitesse réduite si slow
+    } else if (isInvincible) {
+      backgroundsCity[backgroundIndex].x -= 0.4; // Vitesse légèrement plus lente pour simuler la distance
     } else {
-      backgroundsCity[backgroundIndex].x -= 0.2; // Vitesse légèrement plus lente pour simuler la distance
+      backgroundsCity[backgroundIndex].x -= 0.2;
     }
   } else {
-    backgroundIndex ++ ;
-    context.drawImage(backgroundsCity[backgroundIndex].src,backgroundsCity[backgroundIndex].x,backgroundsCity[backgroundIndex].y,backgroundsCity[backgroundIndex].width,backgroundsCity[backgroundIndex].height);
+    if (backgroundIndex === backgroundsCity.length - 1) {
+      backgroundIndex = 0;
+      backgroundsCity.forEach((backgroundCity) => backgroundCity.x = 0);
+      round++;
+    } else {
+      backgroundIndex++;
+    }
   }
 }
 
+//=========================METEO======================
+//=======================/////////======================
+//=======================/////////======================
 
-
-//Obstacles
-var obstacles = [];
-//Vitesse
-var baseSpeed = 2;
-var speed = baseSpeed;
-
-//Bonus
-var bonus = null;
-var bonusType = "";
-var isInvincible = false;
-var invincibilityTimer = 0;
-
-var isSlow = false;
-var slowTimer = 0;
-
-//METEO
 
 var pressureData = null;
 var temperatureData = null;
@@ -154,18 +154,6 @@ async function temperature() {
 }
 temperature();
 
-/*
-async function humidity() {
-  try {
-    const weatherData = await getValueWeather();
-    console.log(weatherData);
-    humidityData = weatherData.humidity;
-    return humidityData
-  } catch (error) {
-    console.error('Erreur lors de la récupération des données météorologiques:', error);
-  }
-}
-  */
 
 async function nebulosity() {
   try {
@@ -185,50 +173,156 @@ nebulosity();
 //Particule
 var particules = [];
 //Son
+
 //const soundJump = new Audio("sound/jump.mp3")
 
-//Gestion du saut
-var jumpStartTime = null;
-var doubleJumpAvailable = true;
+//========================SOLEIL======================
 
-document.addEventListener("keydown", (e) => {
-  if (e.code === "Space") {
-    if (ballY === groundY - 10 || isOnBlock) {
-      velocityY = jumpPower;
-      //soundJump.play();
-      isOnBlock = false; // La balle quitte le bloc
-      doubleJumpAvailable = true;
-    } else if (doubleJumpAvailable) {
-      velocityY = jumpPower + 2;
-      doubleJumpAvailable = false;
-    }
+let angle = 0;
+const rotationCenterX = 400;
+const rotationCenterY = 300; // Centré verticalement
+const circleRadius = 10;
+const circleDistance = canva.width - 500; // Distance entre le centre de rotation et le cercle
+const blurLayers = 4; // Nombre de couches de flou
+const blurIntensity = 10; // Intensité du flou
 
-    if (e.code === "Space" && jumpStartTime === null) {
-      jumpStartTime = Date.now();
-    }
+function drawSun() {
+
+  // Calculer la position du cercle en fonction de l'angle de rotation
+  const circleX = rotationCenterX + circleDistance * Math.cos(angle);
+  const circleY = rotationCenterY + circleDistance * Math.sin(angle);
+
+  // Dessiner le cercle avec effet de flou
+  for (let i = 0; i < blurLayers; i++) {
+    context.beginPath();
+    context.arc(circleX, circleY, circleRadius + i * blurIntensity, 0, 2 * Math.PI);
+    context.fillStyle = `rgba(255, 165, 0, ${(1 - i / blurLayers) * 0.5})`;
+    context.fill();
+    context.closePath();
   }
-});
+  // Incrémenter l'angle pour la rotation
+  angle += 0.002;
+}
 
-document.addEventListener("keyup", (e) => {
-  if (e.code === "Space" && jumpStartTime != null) {
-    let pressDuration = (Date.now() - jumpStartTime) / 1000;
-    jumpStartTime = null;
+//========================NUAGES======================
+var clouds = [];
 
-    let jumpPowerModulated = Math.max(
-      maxJumpPower,
-      minJumpPower - pressDuration * 10
+function generateClouds() {
+  let quantityCloud = Math.floor(nebulositeData);
+
+  if (quantityCloud <= 0) {
+    return;
+  }
+  for (let i = 0; i < quantityCloud; i++) {
+    let cloud = {
+      x: 0,
+      y: 0,
+      size: 0,
+    };
+    cloud.x = Math.floor(Math.random() * 600);
+    cloud.y = Math.floor(Math.random() * 150);
+    cloud.size = Math.floor(Math.random() * (quantityCloud * 10));
+    clouds.push(cloud);
+  }
+}
+
+
+
+function drawCloud() {
+  for (let i = clouds.length - 1; i >= 0; i--) {
+    let cloud = clouds[i];
+
+
+    if (!isSlow) {
+      cloud.x -= 0.2;
+    } else {
+      cloud.x -= 0;
+    }
+
+    context.fillStyle = "rgba(128, 128, 128, 0.3)"; // Couleur blanche pour le nuage
+    context.beginPath();
+
+    // Dessiner les cercles du nuage
+    context.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2); // Cercle principal
+    context.arc(
+      cloud.x + cloud.size * 0.7,
+      cloud.y - cloud.size * 0.4,
+      cloud.size * 0.8,
+      0,
+      Math.PI * 2
+    );
+    context.arc(
+      cloud.x - cloud.size * 0.7,
+      cloud.y - cloud.size * 0.4,
+      cloud.size * 0.8,
+      0,
+      Math.PI * 2
+    );
+    context.arc(
+      cloud.x + cloud.size * 0.4,
+      cloud.y + cloud.size * 0.4,
+      cloud.size * 0.7,
+      0,
+      Math.PI * 2
+    );
+    context.arc(
+      cloud.x - cloud.size * 0.4,
+      cloud.y + cloud.size * 0.4,
+      cloud.size * 0.7,
+      0,
+      Math.PI * 2
     );
 
-    if (ballY === groundY - 10 || isOnBlock) {
-      velocityY = jumpPowerModulated;
-      isOnBlock = false;
-      doubleJumpAvailable = true;
-    } else if (doubleJumpAvailable) {
-      velocityY = jumpPowerModulated;
-    } else if (ballY < groundY - 10) {
+    context.closePath();
+    context.fill();
+
+    // Supprime l'obstacle s'il sort de l'écran
+    if (cloud.x < 0) {
+      cloud.x = canva.width;
     }
   }
-});
+}
+
+//=======================FLOCON DE NEIGE======================
+//=======================///////////////======================
+//=======================///////////////======================
+
+// function drawSnowflake(x, y, size) {
+//   ctx.strokeStyle = '#FFFFFF'; // Blanc pour le flocon
+//   ctx.lineWidth = 2;
+
+//   // Fonction récursive pour dessiner les branches
+//   function drawBranch(x1, y1, length, angle, depth) {
+//       if (depth === 0) return;
+
+//       // Calculer le point final de la branche
+//       const x2 = x1 + length * Math.cos(angle);
+//       const y2 = y1 + length * Math.sin(angle);
+
+//       // Dessiner la branche principale
+//       ctx.beginPath();
+//       ctx.moveTo(x1, y1);
+//       ctx.lineTo(x2, y2);
+//       ctx.stroke();
+
+//       // Dessiner les sous-branches
+//       const newLength = length * 0.6; // Réduction de la taille
+//       drawBranch(x2, y2, newLength, angle - Math.PI / 6, depth - 1); // Branche gauche
+//       drawBranch(x2, y2, newLength, angle + Math.PI / 6, depth - 1); // Branche droite
+//   }
+
+//   // Dessiner les six branches principales du flocon
+//   for (let i = 0; i < 6; i++) {
+//       const angle = (Math.PI / 3) * i;
+//       drawBranch(x, y, size, angle, 3); // Profondeur 3
+//   }
+// }
+
+
+
+//=======================MUSIQUES======================
+//=======================/////////======================
+//=======================/////////======================
 
 const backgroundMusic = new Audio("musique/test3.mp3");
 backgroundMusic.volume = 1; // Ajuste le volume
@@ -238,6 +332,10 @@ backgroundMusic.addEventListener("ended", () => {
   drawEndMessage();
   console.log("ended");
 });
+
+//=========================BONUS======================
+//=======================/////////======================
+//=======================/////////======================
 
 //Generer les bonus
 function generateBonus() {
@@ -306,7 +404,7 @@ function checkBonusCollision() {
 function activateInvincibility() {
   isInvincible = true;
   baseSpeed = 10;
-  invincibilityTimer = 300; // 300 frames (environ 5 secondes si 60 FPS)
+  invincibilityTimer = 300; // 5 seconds => 60 FPS)
 }
 
 function updateInvincibility() {
@@ -332,6 +430,10 @@ function updateSlow() {
     }
   }
 }
+
+//=======================PARTICULE======================
+//=======================/////////======================
+//=======================/////////======================
 
 //Generer les particules
 function generateParticules() {
@@ -369,6 +471,10 @@ function drawParticule() {
     }
   });
 }
+
+//=======================OBSTACLES======================
+//=======================/////////======================
+//=======================/////////======================
 
 //generer les obstacles
 function generateObstacle() {
@@ -450,151 +556,11 @@ function checkObstaclesCollision() {
   }
 }
 
-// // Charger l'image de l'arrière-plan
-// const bgImage = new Image();
-// bgImage.src = "images/paris.png"; // Remplace par le chemin de ton image
-
-// let bgX1 = 0; // Position de la première image
-// let bgX2 = canva.width; // Position de la deuxième image
-
-// function drawScrollingBackground() {
-//   // Dessiner les deux images côte à côte
-//   context.drawImage(bgImage, bgX1, -100, canva.width, canva.height);
-//   context.drawImage(bgImage, bgX2, -100, canva.width, canva.height);
-
-//   // Déplacer les images vers la gauche
-//   if (isSlow) {
-//     bgX1 -= 0; // Vitesse réduite si slow
-//     bgX2 -= 0;
-//   } else {
-//     bgX1 -= 0.1; // Vitesse légèrement plus lente pour simuler la distance
-//     bgX2 -= 0.1;
-//   }
-
-//   // Réinitialiser la position pour créer un défilement infini
-//   if (bgX1 + canva.width <= 0) {
-//     bgX1 = bgX2 + canva.width;
-//   }
-//   if (bgX2 + canva.width <= 0) {
-//     bgX2 = bgX1 + canva.width;
-//   }
-// }
-
-/*
-function drawBackground() {
-  backgrounds.forEach((background) => {
-    if (background.x + background.width < 0) {
-      background.x = canva.width + Math.floor(Math.random() * 300); // Réinitialise l'obstacle à une position aléatoire
-      background.width = 50 + Math.floor(Math.random() * 50); // Taille aléatoire
-      background.height = 200 + Math.floor(Math.random() * 50);
-    }
-    context.fillStyle = "grey";
-    context.fillRect(
-      background.x,
-      groundY - background.height,
-      background.width,
-      background.height
-    );
-
-    // Mouvement des rectangles
-    if (isSlow) {
-      background.x -= baseSpeed;
-    } else {
-      background.x -= baseSpeed * 0.1;
-    }
-    // Moins rapide pour simuler la distance
-    //backgroundX2 -= baseSpeed; // Un peu plus rapide
-
-    // Réinitialisation pour la répétition
-    if (background.x + canva.width < 0) {
-      background.x = canva.width;
-    }
-    /*if (backgroundX2 + canva.width < 0) {
-        backgroundX2 = canva.width;
-      }
-  });
-}
-*/
 
 
-//DESSIN NUAGE
-var clouds = [];
-
-function generateClouds() {
-  let quantityCloud = Math.floor(nebulositeData);
-
-  if (quantityCloud <= 0) {
-    return;
-  }
-  for (let i = 0; i < quantityCloud; i++) {
-    let cloud = {
-      x: 0,
-      y: 0,
-      size: 0,
-    };
-    cloud.x = Math.floor(Math.random() * 600);
-    cloud.y = Math.floor(Math.random() * 150);
-    cloud.size = Math.floor(Math.random() * (quantityCloud * 10));
-    clouds.push(cloud);
-  }
-}
-
-
-
-function drawCloud() {
-  for (let i = clouds.length - 1; i >= 0; i--) {
-    let cloud = clouds[i];
-
-
-    if (!isSlow) {
-      cloud.x -= 0.2;
-    } else {
-      cloud.x -= 0;
-    }
-
-    context.fillStyle = "rgba(128, 128, 128, 0.3)"; // Couleur blanche pour le nuage
-    context.beginPath();
-
-    // Dessiner les cercles du nuage
-    context.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2); // Cercle principal
-    context.arc(
-      cloud.x + cloud.size * 0.7,
-      cloud.y - cloud.size * 0.4,
-      cloud.size * 0.8,
-      0,
-      Math.PI * 2
-    );
-    context.arc(
-      cloud.x - cloud.size * 0.7,
-      cloud.y - cloud.size * 0.4,
-      cloud.size * 0.8,
-      0,
-      Math.PI * 2
-    );
-    context.arc(
-      cloud.x + cloud.size * 0.4,
-      cloud.y + cloud.size * 0.4,
-      cloud.size * 0.7,
-      0,
-      Math.PI * 2
-    );
-    context.arc(
-      cloud.x - cloud.size * 0.4,
-      cloud.y + cloud.size * 0.4,
-      cloud.size * 0.7,
-      0,
-      Math.PI * 2
-    );
-
-    context.closePath();
-    context.fill();
-
-    // Supprime l'obstacle s'il sort de l'écran
-    if (cloud.x < 0) {
-      cloud.x = canva.width;
-    }
-  }
-}
+//=======================MESSAGES======================
+//=======================/////////======================
+//=======================/////////======================
 
 // Fonction pour dessiner le message "Fin"
 function drawEndMessage() {
@@ -612,7 +578,9 @@ function drawEndMessage() {
   }
 }
 
-//-------------MIS A JOUR FRAME----------------
+//=======================AFFICHAGE======================
+//=======================/////////======================
+//=======================/////////======================
 
 function updateGame() {
   if (isGameOver) {
@@ -641,14 +609,16 @@ function updateGame() {
   gradient.addColorStop(0, "#ff7e5f"); // Couleur orange vif
   gradient.addColorStop(1, "#feb47b"); // Couleur pêche
 
-  // Remplir le canvas avec le gradient
+  // Remplir le canva avec le gradient
   context.fillStyle = gradient;
   context.fillRect(0, 0, canva.width, canva.height);
 
+  drawSun();
   drawCloud();
 
-  drawAndUpdateBackground()
+
   drawB(context, canva);
+  drawAndUpdateBackground();
   //drawBackground();
   drawBonus();
   if (pressureData <= 1010) {
@@ -799,6 +769,53 @@ function stopGame() {
   );
   console.log(scoreTab);
 }
+
+//=======================COMMANDES======================
+//=======================/////////======================
+//=======================/////////======================
+
+//Gestion du saut
+var jumpStartTime = null;
+var doubleJumpAvailable = true;
+
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space") {
+    if (ballY === groundY - 10 || isOnBlock) {
+      velocityY = jumpPower;
+      //soundJump.play();
+      isOnBlock = false; // La balle quitte le bloc
+      doubleJumpAvailable = true;
+    } else if (doubleJumpAvailable) {
+      velocityY = jumpPower + 2;
+      doubleJumpAvailable = false;
+    }
+
+    if (e.code === "Space" && jumpStartTime === null) {
+      jumpStartTime = Date.now();
+    }
+  }
+});
+
+document.addEventListener("keyup", (e) => {
+  if (e.code === "Space" && jumpStartTime != null) {
+    let pressDuration = (Date.now() - jumpStartTime) / 1000;
+    jumpStartTime = null;
+
+    let jumpPowerModulated = Math.max(
+      maxJumpPower,
+      minJumpPower - pressDuration * 10
+    );
+
+    if (ballY === groundY - 10 || isOnBlock) {
+      velocityY = jumpPowerModulated;
+      isOnBlock = false;
+      doubleJumpAvailable = true;
+    } else if (doubleJumpAvailable) {
+      velocityY = jumpPowerModulated;
+    } else if (ballY < groundY - 10) {
+    }
+  }
+});
 
 function restartGame() {
   //Réinitialise les variables
